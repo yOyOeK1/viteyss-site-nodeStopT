@@ -4,12 +4,23 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prebundleIt": "rm ./tmp/* ; exit 0",
+    "bundleIt": "time node ./buildIt.js && echo '--- DONE OK' && exit 1",
+    "setSiteAsDev": "./setAsDev.sh",
+    "setSiteAsBundle": "./setAsBundle.sh"
   },
   "author": "Bartłomiej Ceglik <yoyoek@wp.pl>",
   "license": "MIT",
   "description": "Dom Node Stop Time sequancer.",
   "dependencies": {
     "cycle": "^1.0.3"
+  },
+  "devDependencies": {
+    "@esbuild/linux-x64": "^0.25.12",
+    "@rollup/rollup-linux-x64-gnu": "^4.52.5",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "terser": "^5.44.1",
+    "vite": "^7.2.2"
   }
 }

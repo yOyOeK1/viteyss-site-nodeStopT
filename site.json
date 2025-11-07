@@ -5,7 +5,9 @@
     "asModule": true,
     "asVite": true,
     "asPlugin": true,
-    "jssrc":["c_vys_nodeStopT_Page.js"],
+    
+    "jssrc":["tmp/bundle-vysite.js"],
+    
     "enable": true,
     "author": "Bartłomiej Ceglik <yoyoek@wp.pl>",
     "ver": "0.0.1",

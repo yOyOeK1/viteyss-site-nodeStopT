@@ -1,13 +1,11 @@
 import { createApp } from 'vue';
 import NstTimeLine from "./assets/nstTimeLine.vue";
 
-
-
-class s_vysnodeStopTPage{
+class site{
 
   constructor(){
     this.appTL = createApp(NstTimeLine,{});
-
+    console.log('* * 8 8 initated ! c_site ...................... running MODE['+import.meta.env.MODE+']');
 
   }
   
@@ -86,4 +84,4 @@ class s_vysnodeStopTPage{
 
 }
 
-export { s_vysnodeStopTPage };
+export { site as s_vysnodeStopTPage };
