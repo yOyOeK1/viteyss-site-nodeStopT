@@ -6,7 +6,7 @@
     "asVite": true,
     "asPlugin": true,
     
-    "jssrc":["tmp/bundle-vysite.js"],
+    "jssrc":["site.js"],
     
     "enable": true,
     "author": "Bartłomiej Ceglik <yoyoek@wp.pl>",

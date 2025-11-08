@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prebundleIt": "rm ./tmp/* ; exit 0",
+    "cleanIt": "rm ./tmp/* ; exit 0",
     "bundleIt": "time node ./buildIt.js && echo '--- DONE OK' && exit 1",
     "setSiteAsDev": "./setAsDev.sh",
     "setSiteAsBundle": "./setAsBundle.sh"

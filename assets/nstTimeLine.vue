@@ -86,14 +86,15 @@
         <div
             v-for="layer in layers"
             >
-            <a v-if="layer.name != divSelectedName"
+            <a v-if="layer.divName != divSelectedName"
                 @click="makeSelectedNodeByName( layer.divName )">
                 {{ layer.divName }}</a>
             <b v-else>{{ layer.divName }}</b>
-             <input type="checkbox"
+            <input type="checkbox"
                     title="show / hide object / layer" v-model="layer.isVisible"></input>
 
-            <div>
+            <div 
+                >
                 <table>
                     <tr>
                         <td>
@@ -103,7 +104,10 @@
                                 v-for="f in layer.kFrames"
                                 class="debBorders nstFrameCssBlock"
                                 >
-                                <div class="debBorders"
+                                <div 
+                                    :class="'debBorders '+
+                                        (layer.divName != divSelectedName?'nstFrameCssBlockSmaller ':'')
+                                        "
                                     >
                                     [ {{ f.name }} ]</div>
 
@@ -618,6 +622,18 @@ export default{
             this.timeLineStack = timeLineStack;
         },
 
+        playSelectionMarker( markerId ){
+             aajs.animate( markerId,{
+                loop:1,
+                duration: 300,
+                autoplay: true,
+                opacity:{
+                    from: 0.5,
+                    to: 1.0
+                },
+            });
+        },
+
         makeSelectedNode( nodeObj){
              let lR = this.layers.filter( l => {
                 return l.name == nodeObj.selector;
@@ -625,6 +641,9 @@ export default{
             if( lR.length == 1 ){
                 this.divSelected.kFrames = lR[0].kFrames;
             }
+
+            console.log('play selection animation ....',nodeObj.selector.substring(1));
+            this.playSelectionMarker( nodeObj.selector );
 
 
             this.divSelected.obj = nodeObj;
@@ -684,14 +703,17 @@ export default{
 
         
         getKFrameByName( kFrameName, kFrames ){
-            console.log(' name : '+kFrameName+' kframes ',kFrames);
+            console.log(' name : ['+kFrameName+'] kframes:',kFrames);
             if( kFrames.length == 0 ) return [];
-            let res = kFrames.filter( kf => kf.name == kFrameName );
+            let res = kFrames.find( kf => {
+                console.log('       - kf property ',kf);
+                return kf.name === kFrameName;
+            });
             console.log('res ', res );
-            if( res.length == 1 ) return res[0];
+            if( res != undefined ) return res;
             else{
-                console.error('ee wrong count of kFrames by name ['+kFrameName+']');
-                return res;
+                console.error('ee wrong count of kFrames by name ['+kFrameName+'] res:\n',res);
+                return -1;
             }
 
         },
@@ -774,6 +796,8 @@ export default{
                     
                 }
             }
+
+            this.playSelectionMarker( divName );
 
 
             return 1;
@@ -891,6 +915,14 @@ export default{
     overflow:hidden;
     height: 20px;
 
+}
+
+.nstFrameCssBlockSmaller{
+    font-size: 50%;
+}
+.nstFrameCssBlockSmaller div {
+    max-height: 10px;
+    height: 10px;
 }
 
 .nstFrameCssBlockCellSelected{
