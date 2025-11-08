@@ -4,7 +4,6 @@ import NstTimeLine from "./assets/nstTimeLine.vue";
 class site{
 
   constructor(){
-    this.appTL = createApp(NstTimeLine,{});
     console.log('* * 8 8 initated ! c_site ...................... running MODE['+import.meta.env.MODE+']');
 
   }
@@ -19,6 +18,8 @@ class site{
   }
   
   getHtml = () => {
+    this.appTL = createApp(NstTimeLine,{});
+    
     return `
     <!--
     <b>${this.getName}</b><br>

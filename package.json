@@ -4,6 +4,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "startItAsDev": "node ./startItAsDev.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "cleanIt": "rm ./tmp/* ; exit 0",
     "bundleIt": "time node ./buildIt.js && echo '--- DONE OK' && exit 1",
@@ -20,7 +21,10 @@
     "@esbuild/linux-x64": "^0.25.12",
     "@rollup/rollup-linux-x64-gnu": "^4.52.5",
     "@vitejs/plugin-vue": "^6.0.1",
+    "node-yss": "file:../node-yss",
     "terser": "^5.44.1",
-    "vite": "^7.2.2"
+    "vite": "^7.2.2",
+    "viteyss": "file:../viteyss",
+    "viteyss-site-settings1": "file:../viteyss-site-settings1"
   }
 }
