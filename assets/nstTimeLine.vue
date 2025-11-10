@@ -1,7 +1,7 @@
 <template class="nst">
     <div class="nstInfoNowBar">
         frame: ({{ frameNo }}/{{ framesTotal}}) | ms: ({{frameNoAtMs}}) |
-        selected: ({{ divSelectedName }}) |
+        selected: ({{ divSelectedName }}) / ({{ divSelectedProp.join(', ') }}) |
         TL: ({{ isPlaying ?'playing':'stop' }}) {{ playInLoop ? 'loop': '' }} <br></br>ms:(<span id="nstTLMS">nstTLMS</span>) |
         layers: ({{layers.length}})
     </div>
@@ -43,7 +43,7 @@
                 class="nstFindBar">#:
                 <input title="Look for div node $('#....')"
                     type="text" v-model="divFindName"
-                    @change="onDivFindName()"
+                    @change="onDivFindName([])"
                     >
 
                 <button
@@ -86,16 +86,31 @@
         <div
             v-for="layer in layers"
             >
-            <a v-if="layer.divName != divSelectedName"
-                @click="makeSelectedNodeByName( layer.divName )">
-                {{ layer.divName }}</a>
-            <b v-else>{{ layer.divName }}</b>
-            <input type="checkbox"
-                    title="show / hide object / layer" v-model="layer.isVisible"></input>
+            
+            <div class="nstLayerTopBar">
 
-            <div 
-                >
-                <table>
+                <input type="checkbox"
+                    title="show / hide object / layer" v-model="layer.isVisible"></input>
+                
+                <div 
+                    style="display:inline; border:solid 3px rgb(190, 249, 42); padding-right:50px;"
+                    @click="makeSelectedNodeByName( layer.divName, 'all' )">
+                
+                    <span v-if="layer.divName != divSelectedName">
+                        {{ layer.divName }}
+                    </span>
+                    <b v-else>
+                        {{ layer.divName }}
+                    </b>
+                </div>
+
+                
+            </div>
+                
+            
+
+            <div>
+                <table :id="'nstTLTable'+layer.divName.substring(1)">
                     <tr>
                         <td>
 
@@ -104,13 +119,24 @@
                                 v-for="f in layer.kFrames"
                                 class="debBorders nstFrameCssBlock"
                                 >
+                                
+                                <!--/*(layer.divName != divSelectedName?'nstFrameCssBlockSmaller ':'')*/-->
                                 <div 
-                                    :class="'debBorders '+
-                                        (layer.divName != divSelectedName?'nstFrameCssBlockSmaller ':'')
-                                        "
+                                    :class="'debBorders '"
+                                    :style=" 
+                                        (divSelectedProp.indexOf( f.name )!=-1 &&
+                                            layer.divName == divSelectedName )?'font-weight:bold;':'opacity:0.5;'
+                                    "
+                                    @click="makeSelectedNodeByName( layer.divName, [f.name], $event )"
                                     >
-                                    [ {{ f.name }} ]</div>
+                                    [ {{ f.name }} ]
+                                </div>
 
+                                <!--
+                                    <NstPropertyRow :propertyTimeline="f"></NstPropertyRow>
+                                -->
+
+                                <! -- old -->
                                 <div style=""
                                     >
                                     <div v-for="(value,index) in f.keys"
@@ -121,18 +147,42 @@
                                         :title="value!=null?'property [ '+f.name+' ] = '+value:'select this cell [ '+f.name+' ] at frame: '+index"
                                         :class="'nstFrameCssBlockCell '+
                                             (value==null?'nstFrameCssBlockCellEmpty ':'')+
-                                            (index==frameNo?'nstFrameCssBlockCellSelected ':'')
+                                            (index==frameNo && 
+                                                layer.divName == divSelectedName &&
+                                                divSelectedProp.indexOf( f.name ) != -1 ?'nstFrameCssBlockCellSelected ':'')
                                             "
-                                        @click="frameNo=index; makeSelectedNodeByName( layer.divName )"
+                                        @click="frameNo=index; makeSelectedNodeByName( layer.divName, [f.name] )"
                                         >
                                         <small >
-                                            {{ value }}
-
+                                            {{ value }}                                            
                                         </small>
                                     </div>
                                 </div>
-
-
+                                <!-- old -->
+                                <!-- new start -->
+                                 <!--
+                                <div style=""
+                                    >
+                                    <div v-for="(value,index) in f.keys"
+                                        :style="
+                                            'width:'+getKeyCellWidth+'px;'+
+                                            'left:0px;'
+                                            "
+                                        :title="value!=null?'property [ '+f.name+' ] = '+value:'select this cell [ '+f.name+' ] at frame: '+index"
+                                        :class="'nstFrameCssBlockCell '+
+                                            (value==null?'nstFrameCssBlockCellEmpty ':'')+
+                                            (index==frameNo && 
+                                                layer.divName == divSelectedName &&
+                                                divSelectedProp.indexOf( f.name ) != -1 ?'nstFrameCssBlockCellSelected ':'')
+                                            "
+                                        @click="frameNo=index; makeSelectedNodeByName( layer.divName, [f.name] )"
+                                        >
+                                        
+                                         <NstKF :fvalue="value" :propName="f.name" :kIndex="index" :frameNo="frameNo"/>
+                                    </div>
+                                </div>
+                                -->
+                                <!-- new end -->
 
                             </div>
                             <!--
@@ -202,12 +252,19 @@
 
 <script>
 
-import { decycle } from 'cycle';
+
 import { toRaw,reactive,ref } from 'vue';
+import NstKF from './nstKF.vue';
+import { layerHelper, layers_to_saveJson, layers_from_json } from '../layerHelper';
+//import nstProperty from './nstProperty.vue';
 
 let nstTLMSDiv = -1;
 
 export default{
+    components:{ 
+        //"NstPropertyRow": nstProperty 
+        "NstKF": NstKF
+    },
     mounted(){
         console.log('nstTimeLine mounted ');
         //window['cycle'] = decycle;
@@ -295,6 +352,7 @@ export default{
 
             divFindName:'',
             divSelectedName: '',
+            divSelectedProp: [],
             divSelected:{
                 divName:'',
                 order: 0,
@@ -328,14 +386,14 @@ export default{
 
             this.frameNoAtMs = this.msAtFrame( this.frameNo );
             //this.frameNo = nframe;
-            console.log('(watch) frameNo changed ! ',nframe,' from ',oframe,
+            if( 0 ) console.log('(watch) frameNo changed ! ',nframe,' from ',oframe,
                 '\nframeNoAtMs: '+this.frameNoAtMs+" ms."
             );
 
             if( this.timeLine != null ){
-                this.timeLine.stretch( this.framesTotalMs );
+                //this.timeLine.stretch( this.framesTotalMs );
                 this.timeLine.seek( this.frameNoAtMs );
-                this.timeLine.stretch( this.framesTotalMs / this.replayTimeScale );
+                //this.timeLine.stretch( this.framesTotalMs / this.replayTimeScale );
             }
             //this.onSeekSet();
         }
@@ -421,23 +479,35 @@ export default{
         },
 
 
-        onSeekSet_noMore(){
-            if( this.timeLine != null )
-                this.timeLine.seek( this.frameNoAtMs );
-            else
-                console.log('seek but no timeLine !');
-
-        },
-
         onLoadToLocal(){
-            let j = JSON.parse(localStorageH.getK( 'nst/1' ));
-            console.log(' on load to lacal.....',j);
-            this.layers = j;
-            this.lookForKeyFramesToBuild();
+            let j = JSON.parse(localStorageH.getK( 'nst/v2/1' ));
+            let loadRes = layers_from_json( this, j );
+            debugger
+            console.log(' on load to lacal.....',loadRes);
+            this.layers = loadRes;
+            //this.lookForKeyFramesToBuild();
             this.frameNo = 0;
+            $.toast(`Loaded<br>
+                fps: ${j.fps}<br>
+                frames: ${j.framesTotal}`);
         },
 
         onSaveToLocal(){
+            let res = layers_to_saveJson( this, toRaw(this.layers),{ 
+                localStorageH: true,
+                asName: 'nst/v2/1' 
+            } );
+
+            if( res.data.layers.length == 0 ){
+                $.toast('No layers to save');
+            }else{
+                $.toast(
+                    'Layers save in local storage<br>'+
+                    '<small>Adress:</small> '+res.saveAdr
+                );
+            }
+
+            /*
             console.log(' on save to lacal ....');
             let tr = [];
             this.layers.forEach( l =>{
@@ -467,6 +537,7 @@ export default{
 
                 console.error('EE when parsing tr to save jsone\n',e);
             }
+                */
         },
 
         onPlay(){
@@ -543,10 +614,8 @@ export default{
                             tStart = this.msAtFrame( lastFrameAt );
                             let opts = {
                                 duration: this.msAtFrame(kframe.frameNo-lastFrameAt),
-
                                 left: kframe.values.left,
                                 top: kframe.values.top,
-
                             };
 
 
@@ -634,7 +703,7 @@ export default{
             });
         },
 
-        makeSelectedNode( nodeObj){
+        makeSelectedNode( nodeObj, properties = [] ){
              let lR = this.layers.filter( l => {
                 return l.name == nodeObj.selector;
             });
@@ -645,34 +714,61 @@ export default{
             console.log('play selection animation ....',nodeObj.selector.substring(1));
             this.playSelectionMarker( nodeObj.selector );
 
-
             this.divSelected.obj = nodeObj;
             this.divSelected.divName = nodeObj.selector;
             //this.divSelected.dSize = [ nodeObj.width(), nodeObj.height() ];
             //this.divSelected.pos = [ nodeObj.offset().left, nodeObj.offset().top ];
             this.divSelected.frameAddedAt = parseInt( this.frameNo );
             this.divSelectedName = nodeObj.selector;
+            
+
+            if( properties != [] )
+                this.divSelectedProp = properties;
+            
+
+            if( this.divSelectedProp == 'all') 
+                this.divSelectedProp = this.layers.filter(l=> l.divName == this.divSelected.divName )[0].kFrames.map(par => par.name );
+
             //this.divSelected.name = nodeObj.selector;
             //console.log(' make selected node div selected:\n',JSON.stringify(this.divSelected,null,4));
 
         },
 
-        onDivFindName(){
+        onDivFindName( properties = [] ){
             let lookRes = $(`#${this.divFindName}`);
             console.log('div find name ....'+this.divFindName,
                 ' have ('+lookRes.length+')'
             );
 
             if( lookRes.length == 1 ){
-                this.makeSelectedNode ( lookRes );
+                this.makeSelectedNode ( lookRes, properties );
                 console.log('css\n',this.getCssValuesOfById( this.divFindName ));
             }
 
         },
-        makeSelectedNodeByName( nName ){
-            console.log(' make selected node by name :',nName );
+        makeSelectedNodeByName( nName, properties = [], event = undefined ){
+
+            console.log(' make selected node by name :',nName, '\nprops:',properties,'\nevent: ',event);
+            
+            if( event != undefined ){
+                let pointC = [event.clientX, event.clientY];
+                let divOnC = $($('#nstTLTable'+nName.substring(1))[0]);
+                let divSize = [ divOnC.width(), divOnC.height() ];
+                let seekN = mMapVal( pointC[0], 0, divSize[0], 0,1 );
+                let tFrame = parseInt( this.framesTotal * seekN );
+                console.log('event seek to ?',
+                    '\n divSize:', divSize,
+                    '\n seekN:',seekN,
+                    '\n newFrame: ',tFrame
+                );
+                this.frameNo = tFrame;
+
+            }
+            
+            
+            
             this.divFindName = nName.substring(1);
-            this.onDivFindName();
+            this.onDivFindName( properties );
 
         },
 
@@ -686,16 +782,28 @@ export default{
 
         getQueryAboutWhatTo(){
             let css = this.getCssValuesOfById( this.divSelectedName.substring(1) );
-            /*
-            let cssVal = null;
-            if( cssk in objCss ) cssVal = objCss[ cssk ];
-            */
+           
+            let keysTest1 = {
+               'left': css['left'],
+               'top': css['top'],
+            };
+            // TODO should be from dialog 
+            let tr = keysTest1;
+        
+            // is is some selected 
+            if( this.divSelectedProp != 'all' && this.divSelectedProp.length != 0 ){
+                console.log('nst[i] properties from selection props...');
+                tr = {};
+                this.divSelectedProp.forEach( p=>
+                    tr[ p ] = css[ p ]
+                );
+            }
+
+            this.divSelectedProp = Object.keys( tr );
             return {
+                'animeOpts': 'set',
                 'css': css,
-                'keys': {
-                    'left': css['left'],
-                    'top': css['top'],
-                }
+                'keys': tr
             };
         },
 
@@ -729,20 +837,27 @@ export default{
 
         },
 
-        layersAddNew( newL ){
-            this.layers.push( newL );
-        },
-
+        
         onAddKeyFrame(){
             let deb = false;
             let cFrame = parseInt(this.frameNo);
             let divName = this.divSelectedName;
-            console.log(' on add key frameNo('+cFrame+') .... at ('+this.frameNoAtMs+')ms. ',
-                '\nselected now: '+divName
-            );
+            let layers = this.layers;
 
-
-
+            //chk layer for divName
+            let layerId = this.layers.findIndex( l=> l.name == divName );
+            let layer = -1;
+            if( layerId  == -1){
+                let nLayer =  this.divSelected;
+                layer = JSON.parse( JSON.stringify( nLayer ) );
+                layer['name'] = divName;
+                layers.push( layer );
+            }else{
+                layer = layers[ layerId ];
+            }
+            
+            
+            
             // TODO query dialog what to get
             let q = this.getQueryAboutWhatTo();
             if( q.keys.length == 0 ){
@@ -750,19 +865,14 @@ export default{
                 return 1;
             }
             // query done
-
+            
+            console.log(' on add key frameNo('+cFrame+') .... at ('+this.frameNoAtMs+')ms. ',
+                '\nselected now: '+divName+' / ('+JSON.stringify(this.divSelectedProp)+')',
+                '\nquery result: ',q
+            );
             
 
-            let layer = this.layers.filter(l=> l.divName == divName );
-            if( layer.length == 0 ){
-                layer = JSON.parse( JSON.stringify( this.divSelected ) );
-                this.layersAddNew( layer );
-                console.log('[i] insert new layer  so layer\n',layer);
-            }else{
-                layer = layer[0];
-                console.log('[i] existing layer', layer,'\nkFrames',layer.kFrames);
-
-            }
+           
 
             if( layer.kFrames.length == 0 ){
                 console.log('       * is fist kFrames layer in project,\n',layer);
@@ -775,33 +885,44 @@ export default{
                 if( deb ) console.log(' - css ['+cssk+'] now is ['+q.keys[cssk]+'] res :',kFrame);
 
                 if( kFrame == -1 || kFrame.length == 0 ){ // new
-                    console.log(' * first kFrame  ....');
-                    //let k = { name: 'opacity', values:[ {frameNo: 0, value: 1.0 } ] };
-                    let k = {
+                    console.log(' * first ['+cssk+'] kFrame  ....');
+
+                    //let propKeys
+                    kFrame = {
                         name: cssk,
-                        'keys': new Array( this.framesTotal )
+                        'keys': new Array( this.framesTotal ),
+                        lHelpers: new Array( this.framesTotal )
                     };
-                    k.keys[cFrame] = q.keys[ cssk ];
-                    layer.kFrames.push( k );
+                    
+                    kFrame.keys[cFrame] = q.keys[ cssk ];
+                    kFrame.lHelpers[ cFrame ] = new layerHelper( this, layer, kFrame, cFrame );
+                    kFrame.lHelpers[ cFrame ].add( q.animeOpts, q.keys[ cssk ] );
+
+                    layer.kFrames.push( kFrame );
+                    
                     
                 }else{
 
                     if( kFrame.keys[ cFrame ] == null ){
                         kFrame.keys[ cFrame ] = q.keys[ cssk ];
-                        console.info( ' [i] adding key at frameNo ?',cFrame, deb?kFrame:'');
+                        console.info( ' [i] adding key ['+cssk+'] at frameNo ?',cFrame, deb?kFrame:'');
+                        kFrame.lHelpers[ cFrame ] = new layerHelper( this, layer, kFrame, cFrame );
+                        kFrame.lHelpers[ cFrame ].add( q.animeOpts, q.keys[ cssk ] );
+
                     } else {
                         kFrame.keys[ cFrame ] = q.keys[ cssk ];
-                        console.info( ' [i] key ['+cssk+']  update to ['+kFrame.keys[ cFrame ]+']');
+                        console.info( ' [i] update key ['+cssk+']   to ['+kFrame.keys[ cFrame ]+']');
+                        TODO
                     }
                     
                 }
             }
 
             this.playSelectionMarker( divName );
-
-
             return 1;
-
+        },
+        
+        delIt_abccc(){
 
             // old :(
             let kFrame = {
@@ -903,6 +1024,10 @@ export default{
 
 }
 
+.nstLayerTopBar{
+    border: 2px rgb(180, 225, 142) solid;
+    border-radius: 10px;
+}
 
 .nstFrameCssBlock{
     position: relative;
@@ -913,7 +1038,7 @@ export default{
     display:inline-block;
     position:relative;
     overflow:hidden;
-    height: 20px;
+    height: 30px;
 
 }
 
