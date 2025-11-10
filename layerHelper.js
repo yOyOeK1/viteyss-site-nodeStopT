@@ -31,8 +31,10 @@ class layerHelper{
         let toLeftKId = this.atFrame-1;
         let rpk = toRaw( this.propKeys );
         for(; toLeftKId>0; toLeftKId--){
-            if( rpk[ toLeftKId ] != null )
+            if( rpk[ toLeftKId ] != null ){
+                toLeftKId++;
                 break;
+            }
         }
         if( toLeftKId == -1 ) toLeftKId = 0;
 

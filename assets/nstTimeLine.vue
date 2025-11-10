@@ -482,7 +482,7 @@ export default{
         onLoadToLocal(){
             let j = JSON.parse(localStorageH.getK( 'nst/v2/1' ));
             let loadRes = layers_from_json( this, j );
-            debugger
+            
             console.log(' on load to lacal.....',loadRes);
             this.layers = loadRes;
             //this.lookForKeyFramesToBuild();
@@ -843,19 +843,28 @@ export default{
             let cFrame = parseInt(this.frameNo);
             let divName = this.divSelectedName;
             let layers = this.layers;
-
-            //chk layer for divName
-            let layerId = this.layers.findIndex( l=> l.name == divName );
             let layer = -1;
-            if( layerId  == -1){
-                let nLayer =  this.divSelected;
-                layer = JSON.parse( JSON.stringify( nLayer ) );
-                layer['name'] = divName;
+
+            let lRes = layers.findIndex( l=> l.divName == divName );
+            if( lRes == -1 ){
+                layer = {
+                    divName:divName,
+                    order: 0,
+                    isVisible: true,
+                    obj: null,
+                    frameAddedAt: cFrame,
+                    kFrames: [],
+                }
+                layer.name = divName;
+                layer.fFrames = [];
                 layers.push( layer );
+
             }else{
-                layer = layers[ layerId ];
+                layer = layers[ lRes ];
             }
-            
+
+
+        
             
             
             // TODO query dialog what to get
