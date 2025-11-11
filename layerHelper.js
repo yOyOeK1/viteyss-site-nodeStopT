@@ -1,4 +1,4 @@
-import { toRaw } from 'vue';
+import { toRaw,ref } from 'vue';
 import { decycle } from 'cycle';
 
 class layerHelper{
@@ -15,7 +15,7 @@ class layerHelper{
         this.atFrameMs = parseInt(atFrame*nst.frameMs);
         this.frameNoRange = [-1, atFrame];
 
-        this.tl_label = 'setXX'+this.l.name.substring(1)+'XX'+this.propName+'XX'+this.atFrame;
+        this.tl_label = 'setXX'+this.l.divName.substring(1)+'XX'+this.propName+'XX'+this.atFrame;
         this.orgAdd = -1;
 
        
@@ -61,13 +61,16 @@ class layerHelper{
 
     }
 
-
+    update=(  animeOpts, valueOpts, doFrameNoRange_update = false )=>{
+        this.timeLine.remove( this.tl_label );
+        this.add( animeOpts, valueOpts, doFrameNoRange_update );
+    }
 
     add=(  animeOpts, valueOpts, doFrameNoRange_update = true )=>{
         this.orgAdd = { animeOpts, valueOpts };
                 
         if( doFrameNoRange_update ) this.frameNoRange_update();
-        let deb = ['R/obj/ ['+this.tl_label+']  '+this.l.name+' CALL @ '+this.atFrameMs+'ms',
+        let deb = ['R/obj/ ['+this.tl_label+']  '+this.l.divName+' CALL @ '+this.atFrameMs+'ms',
                     '\n in range frames ',this.frameNoRange.join('...'),
                     '\n ------ valueOpts: ',valueOpts
                  ];
@@ -222,6 +225,7 @@ let layers_from_json=( nst, json, opts )=>{
 };
 
 
-
-
-export{ layerHelper,layers_to_saveJson, layers_from_json }
+export{ 
+    layerHelper,
+    layers_to_saveJson, layers_from_json
+ }
