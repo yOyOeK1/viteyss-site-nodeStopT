@@ -131,6 +131,7 @@ let layers_to_saveJson=( nst, layers, opts = {
                 
         
         tLayer['obj'] = '';
+        tLayer['propertiesNow'] = {};
 
         tLayer.kFrames.forEach( prop =>{
             if( prop!=undefined ){     

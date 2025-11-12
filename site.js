@@ -49,7 +49,8 @@ class site{
         style="width:20px;height:20px;position:fixed;
           left:200px;top:20px;
           background-color:brown;"
-          onclick="setOpts.Dragging_start(this,e=>{console.log('dragg',e);
+          onclick="setOpts.Dragging_start(this,e=>{
+             //console.log('dragg',e);
              $('#dB').css('left',e.cXY[0]);
              $('#dB').css('top',e.cXY[1]);
           });"

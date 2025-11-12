@@ -1,12 +1,23 @@
 <template class="nst">
     <div class="nstInfoNowBar">
         frame: ({{ frameNo }}/{{ framesTotal}}) | ms: ({{frameNoAtMs}}) |
-        selected: ({{ divSelectedName }}) / ({{ propertiesSelectedStr }}) |
+        selected: ({{ divSelectedName }}) / ({{ propertiesSelectedStr }}) | observs: ({{ observeAtId }}) |
         TL: ({{ isPlaying ?'playing':'stop' }}) {{ playInLoop ? 'loop': '' }} <br></br>ms:(<span id="nstTLMS">nstTLMS</span>) |
         layers: ({{layers.length}})
     </div>
 
-
+    <div v-if="lSelected != -1">
+        <NstPropSelector 
+            
+            :layerSelected="layelSelected"
+            :divSelectedName="divSelectedName"
+            :properties="propertiesSelectedNow"
+            :selected="propertiesSelected"
+            @nst-prop-selection-change="propertiesSelectedChange"
+            @nst-value-manipulator="onEmit_setPropertiesOfNobeById"
+            />
+    </div>
+        
     <div
         class="nstTimeLine">Tools:<br></br>
 
@@ -159,61 +170,10 @@
                                     </div>
                                 </div>
                                 <!-- old -->
-                                <!-- new start -->
-                                 <!--
-                                <div style=""
-                                    >
-                                    <div v-for="(value,index) in f.keys"
-                                        :style="
-                                            'width:'+getKeyCellWidth+'px;'+
-                                            'left:0px;'
-                                            "
-                                        :title="value!=null?'property [ '+f.name+' ] = '+value:'select this cell [ '+f.name+' ] at frame: '+index"
-                                        :class="'nstFrameCssBlockCell '+
-                                            (value==null?'nstFrameCssBlockCellEmpty ':'')+
-                                            (index==frameNo && 
-                                                layer.divName == divSelectedName &&
-                                                divSelectedProp.indexOf( f.name ) != -1 ?'nstFrameCssBlockCellSelected ':'')
-                                            "
-                                        @click="frameNo=index; makeSelectedNode_ByName( layer.divName, [f.name] )"
-                                        >
-                                        
-                                         <NstKF :fvalue="value" :propName="f.name" :kIndex="index" :frameNo="frameNo"/>
-                                    </div>
-                                </div>
-                                -->
-                                <!-- new end -->
+                                
 
                             </div>
-                            <!--
-                            <br></br><br></br>
-
-
-                            <div>
-
-
-                                <div
-                                    v-for="f in framesTotal"
-                                    style="width:25px;display: inline-block;">
-
-
-                                    <b v-if="frameNo == f-1">{{f-1}}</b>
-                                    <i v-else><small>{{f-1}}</small></i>
-
-
-
-                                    <div v-if="layer.kFrames[ f-1 ] != null">
-                                        x
-                                    </div>
-                                    <div v-else>_</div>
-                                    <div>
-                                        <a @click="frameNo=f-1; makeSelectedNode_ByName( layer.divName )">
-                                            {{ getCellType( layer, f-1) }}
-                                        </a>
-                                    </div>
-                                </div>
-                             </div>
-                             -->
+                           
 
                         </td>
                     </tr>
@@ -254,9 +214,11 @@
 
 
 import { toRaw,reactive,ref } from 'vue';
-import NstKF from './nstKF.vue';
+//import NstKF from './nstKF.vue';
 import { layerHelper, 
     layers_to_saveJson, layers_from_json } from '../layerHelper';
+import NstPropSelector from './nstPropSelector.vue';
+import NstValueManipulator from './nstValueManipulator.vue';
 //import nstProperty from './nstProperty.vue';
 
 let nstTLMSDiv = -1;
@@ -264,14 +226,14 @@ let nstTLMSDiv = -1;
 export default{
     components:{ 
         //"NstPropertyRow": nstProperty 
-        "NstKF": NstKF
+        //"NstKF": NstKF
+        "NstPropSelector": NstPropSelector,
+        "NstValueManipulator": NstValueManipulator
     },
     mounted(){
         console.log('nstTimeLine mounted ');
         //window['cycle'] = decycle;
 
-        
-        
         
         setTimeout(()=>{
             this.timeLine.label('start', 0 )
@@ -351,7 +313,7 @@ export default{
             iterator: null,
 
             getKeyCellWidth: cellWidth,
-
+            
             divFindName:'',
             /*
             divSelectedName: '',
@@ -360,19 +322,23 @@ export default{
                 divName:'',
                 order: 0,
                 isVisible: true,
-
                 obj: null,
-
                 frameAddedAt: 0,
                 kFrames: [
 //                    { name: 'opacity', values:[ [frameNo: 0, value: 1.0 ], ] },
                 ],
+                propertiesNow:{}
             },
             */
             timeLine: timeLine,
             timeLineStack:[],
             nstTLMS: nstTLMS,
             propertiesSelected:[],
+            propertiesSelectedNow:{},
+            propertiesUpdateDelay:-1,
+            observeAtId: null,
+            observe: null,
+
             lSelected:-1,
             layers:[]
 
@@ -392,7 +358,14 @@ export default{
         propertiesSelectedStr(){
             if( this.propertiesSelected == 'all' ) return 'all';
             else return this.propertiesSelected.join(', ');
+        },
+        propertiesSelectedNow_computed(){
+            return this.propertiesSelectedNow;
         }
+        //propertiesSelectedNow(){
+        //    return this.getPropertiesOfNode_ById( this.divSelectedName.substring(1) );
+        //}
+
     },
     watch:{
         replayTimeScale( nScale, oScale ){
@@ -426,9 +399,29 @@ export default{
     },
     
     methods:{
+
+        //onEmit_nstValueManipulator( opts )
+        onEmit_setPropertiesOfNobeById( opts ){
+            this.setPropertiesOfNode_ById( String(this.divSelectedName).substring(1), opts );  
+        },
         propertiesSelected_Set( props ){
             this.propertiesSelected = props;
         },
+        propertiesSelectedChange( propState ){
+            if( propState.wantState == false ){
+                let pIn = this.propertiesSelected.findIndex( ps => ps == propState.pName );
+                if( pIn == undefined ){
+                    console.error('ee want to change selection not existing in selection :/',propState);
+                }else{
+                    this.propertiesSelected.splice(pIn,1);
+                }
+                
+            }else
+                this.propertiesSelected.push( propState.pName );
+
+
+            
+        },  
 
         layer_getByDivName( divName, addToLayers = true ){
             let lId = this.layers.findIndex( l=>l.divName==divName);
@@ -439,9 +432,13 @@ export default{
                     divName: String(divName),
                     order: 0,
                     isVisible: true,
+                    domType: 'html',
+                    domSrcOver: 'local',
+                    nodeObservator: null,
                     obj: $(divName),
                     frameAddedAt: parseInt( this.frameNo ),
                     kFrames: [],
+                    propertiesNow: {}
                 };
                 if( addToLayers == true )
                     this.layers.push( layer );
@@ -571,7 +568,7 @@ export default{
         playSelectionMarker( markerId ){
              aajs.animate( markerId,{
                 loop:1,
-                duration: 300,
+                duration: 600,
                 autoplay: true,
                 opacity:{
                     from: 0.5,
@@ -596,17 +593,20 @@ export default{
 
             if( lookRes.length == 1 ){
                 this.makeSelectedNode_ByDivObj ( lookRes, properties );
-                //console.log('css\n',this.getCssValuesOfById( this.divFindName ));
+                //console.log('css\n',this.getPropertiesOfNode_ById( this.divFindName ));
             }
 
         },
 
+
+        
 
 
         makeSelectedNode_ByDivObj( divObj, properties = [] ){    
             let layer = this.layer_getByDivName( divObj.selector );//layer_get_layerByDivName( this.layers, divObj.selector, this.frameNo );
             this.lSelected = this.layers.findIndex( l=>l.divName == divObj.selector ) ;
             
+            this.propertiesSelectedNow = this.getPropertiesOfNode_ById( divObj.selector.substring(1), this.onDivObjPropertiesUpdate );
             
             
             if( properties != [] )
@@ -645,16 +645,83 @@ export default{
 
         },
 
-        getCssValuesOfById( byId ){
-            //console.log(' get css for id: ['+byId+']');
-            let fd = {};
-            let compCs = window.getComputedStyle( document.getElementById( byId ) );
+        getPropertiesDom_local_html( layer, byId, callBackOnChange = undefined ){
+            let fd = {};            
+            let node = document.getElementById( byId );
+            if( node == undefined ) return undefined;
+            let compCs = window.getComputedStyle( node );
             compCs.forEach( pName => fd[ pName ] = compCs.getPropertyValue( pName ) );
+
+            // observator of changes 
+            
+            if( callBackOnChange != undefined ){
+                if( this.observeAtId != byId && this.observeAtId != null ){
+                    toRaw( this.observe ).disconnect();
+                    console.log(`observer KILL/DISCONNECT for [${layer.domType}@${layer.domSrcOver}]#[${byId}] of node ......`);
+                }
+
+                this.observeAtId = String( byId );
+                let observer = new MutationObserver((mutationsList) => {
+                    for (const mutation of mutationsList) 
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'style') 
+                            callBackOnChange( mutation, byId );                            
+                });
+
+                observer.observe( node, { attributes: true });
+                console.log(`observer START for [${layer.domType}@${layer.domSrcOver}]#[${byId}] of node ......`);
+                this.observe = observer;
+            }
+
             return fd;
         },
 
+        getPropertiesOfNode_ById( byId, callBackOnChange = undefined ){
+            // get properties CSS from node
+            let layer = this.layer_getByDivName( '#'+byId );
+            console.log(` get properties [${layer.domType}@${layer.domSrcOver}]#[${byId}] of node`);
+
+            if( layer.domSrcOver == 'local' && layer.domType == 'html' ){
+                return this.getPropertiesDom_local_html( layer, byId, callBackOnChange );             
+
+            }else {
+                //TODO
+                // different then local html dome source of properties ws ?
+            }
+
+            
+        },
+
+
+
+        setPropertiesOfNode_ById( byId, opts ){
+            let layer = this.layer_getByDivName( '#'+byId );
+            console.log(` set properties  [${layer.domType}@${layer.domSrcOver}]#[${byId}] of node opts:`+JSON.stringify(opts,null,4) );
+
+            if( layer.domSrcOver == 'local' && layer.domType == 'html' ){
+                $( '#'+byId ).css( `${opts.propName}`, `${opts.newValue}` );
+
+            } else {
+                //TODO
+                // different then local html dome source of properties ws ?
+            }
+
+        },
+
+        onDivObjPropertiesUpdate( mutation, byId ){
+            //console.log('diff div obj update : byId ['+byId+']');
+            if( this.propertiesUpdateDelay == -1 ){
+            }else{
+                clearTimeout( this.propertiesUpdateDelay );
+            }
+            this.propertiesUpdateDelay = setTimeout(()=> {
+
+                this.propertiesSelectedNow = this.getPropertiesOfNode_ById( byId );
+            },100);3
+
+        },
+
         getQueryAboutWhatTo(){
-            let css = this.getCssValuesOfById( this.divSelectedName.substring(1) );
+            let css = this.getPropertiesOfNode_ById( this.divSelectedName.substring(1) );
            
             let keysTest1 = {
                'left': css['left'],
@@ -772,7 +839,7 @@ export default{
                 }
             }
 
-            this.playSelectionMarker( divName );
+            //this.playSelectionMarker( divName );
             return 1;
         }
 
