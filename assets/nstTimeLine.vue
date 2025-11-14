@@ -2,19 +2,46 @@
     <div class="nstInfoNowBar">
         frame: ({{ frameNo }}/{{ framesTotal}}) | ms: ({{frameNoAtMs}}) |
         selected: ({{ divSelectedName }}) / ({{ propertiesSelectedStr }}) | observs: ({{ observeAtId }}) |
-        TL: ({{ isPlaying ?'playing':'stop' }}) {{ playInLoop ? 'loop': '' }} <br></br>ms:(<span id="nstTLMS">nstTLMS</span>) |
+        aSelected: (
+            <!--
+                {{ animeSelected }}) 
+            -->
+            <NstAnimSelector 
+                style="display: inline;"
+                asMode="viewMini"
+                :selected="animeSelected"
+                />
+            
+            |
+        TL: ({{ isPlaying ?'playing':'stop' }}) {{ playInLoop ? 'loop': '' }} <br></br>ms: (<span id="nstTLMS">- - -</span>) |
         layers: ({{layers.length}})
     </div>
 
-    <div v-if="lSelected != -1">
-        <NstPropSelector 
+   
+
+    <div v-if="lSelected != -1"
+        style="border-radius:5px; border:solid blueviolet 2px;padding:5px; margin:5px;">
+        
+        <NstAnimSelector
+            asMode="edit"
+            :layerSelected="layelSelected"
+            :divSelectedName="divSelectedName"
+            :selected="animeSelected"
             
+            @nst-animation-change="onEmit_setAnimeChange"
+        
+            />
+
+        <NstPropSelector 
+            v-if="1"
             :layerSelected="layelSelected"
             :divSelectedName="divSelectedName"
             :properties="propertiesSelectedNow"
             :selected="propertiesSelected"
+            
             @nst-prop-selection-change="propertiesSelectedChange"
             @nst-value-manipulator="onEmit_setPropertiesOfNobeById"
+        
             />
     </div>
         
@@ -23,12 +50,12 @@
 
         <div class="nstBox1">
             <div class="nstControlsBar">
-                <button @click="frameNo = 0">|<</button>
-                <button @click="frameNo--"><</button>
+                <button @click="frameNo = 0; nstTimeSlideInput_focus();">|<</button>
+                <button @click="frameNo--;nstTimeSlideInput_focus();"><</button>
                 <button v-if="isPlaying"
-                    @click="onStop()">stop</button>
+                    @click="onStop();nstTimeSlideInput_focus();">stop</button>
                 <button v-else
-                    @click="onPlay()">play</button>
+                    @click="onPlay();nstTimeSlideInput_focus();">play</button>
                 <input type="checkbox" v-model="playInLoop"
                     title="Play in loop"></input>
                 <select v-model="replayTimeScale">
@@ -37,8 +64,8 @@
                 </select>
 
 
-                <button @click="frameNo++">></button>
-                <button @click="frameNo = framesTotal">>|</button>
+                <button @click="frameNo++;nstTimeSlideInput_focus();">></button>
+                <button @click="frameNo = framesTotal;nstTimeSlideInput_focus();">>|</button>
             </div>
 
             <div class="nstDebugBar">
@@ -59,9 +86,11 @@
 
                 <button
                     v-if=" lSelected != -1 "
+                    id="nstInsertKeyFrameNode"
                     title="Insert key frame"
-                    @click="onAddKeyFrame()"
+                    @click="onAddKeyFrame();nstTimeSlideInput_focus();"
                     >+</button>
+                
 
             </div>
 
@@ -79,6 +108,7 @@
 
         <input
             style="min-width: 100%;"
+            ref="nstTimeSlideInput"
             type="range"
             min="0"
             :max="framesTotal-1"
@@ -162,7 +192,7 @@
                                                 layer.divName == divSelectedName &&
                                                 propertiesSelected.indexOf( f.name ) != -1 ?'nstFrameCssBlockCellSelected ':'')
                                             "
-                                        @click="frameNo=index; makeSelectedNode_ByName( layer.divName, [f.name] )"
+                                        @click="frameNo=index; makeSelectedNode_ByName( layer.divName, [f.name] ); nstTimeSlideInput_focus();"
                                         >
                                         <small >
                                             {{ value }}                                            
@@ -219,6 +249,7 @@ import { layerHelper,
     layers_to_saveJson, layers_from_json } from '../layerHelper';
 import NstPropSelector from './nstPropSelector.vue';
 import NstValueManipulator from './nstValueManipulator.vue';
+import NstAnimSelector from './nstAnimSelector.vue';
 //import nstProperty from './nstProperty.vue';
 
 let nstTLMSDiv = -1;
@@ -228,7 +259,8 @@ export default{
         //"NstPropertyRow": nstProperty 
         //"NstKF": NstKF
         "NstPropSelector": NstPropSelector,
-        "NstValueManipulator": NstValueManipulator
+        "NstValueManipulator": NstValueManipulator,
+        "NstAnimSelector": NstAnimSelector,
     },
     mounted(){
         console.log('nstTimeLine mounted ');
@@ -263,7 +295,7 @@ export default{
     data(){
 
         let fps = 10.00;
-        let framesTotal = 15;
+        let framesTotal = 19;
 
         let frameMs = parseInt( 1000.00 / fps );
         let framesTotalMs = frameMs* (framesTotal-1);
@@ -333,6 +365,8 @@ export default{
             timeLine: timeLine,
             timeLineStack:[],
             nstTLMS: nstTLMS,
+
+            animeSelected:{ type: 'set' },
             propertiesSelected:[],
             propertiesSelectedNow:{},
             propertiesUpdateDelay:-1,
@@ -399,7 +433,12 @@ export default{
     },
     
     methods:{
-
+        nstTimeSlideInput_focus(){
+            this.$refs.nstTimeSlideInput.focus();
+        },
+        onEmit_setAnimeChange( opts ){
+            this.animeSelected = opts.wantState;            
+        },
         //onEmit_nstValueManipulator( opts )
         onEmit_setPropertiesOfNobeById( opts ){
             this.setPropertiesOfNode_ById( String(this.divSelectedName).substring(1), opts );  
@@ -604,17 +643,19 @@ export default{
 
         makeSelectedNode_ByDivObj( divObj, properties = [] ){    
             let layer = this.layer_getByDivName( divObj.selector );//layer_get_layerByDivName( this.layers, divObj.selector, this.frameNo );
+            this.lSelected = -1;
+            this.propertiesSelectedNow = this.getPropertiesOfNode_ById( divObj.selector.substring(1), this.onDivObjPropertiesUpdate );
+            this.animeSelected = this.getAnimeOfNode_layer( layer );
             this.lSelected = this.layers.findIndex( l=>l.divName == divObj.selector ) ;
             
-            this.propertiesSelectedNow = this.getPropertiesOfNode_ById( divObj.selector.substring(1), this.onDivObjPropertiesUpdate );
-            
-            
+                        
             if( properties != [] )
                 this.propertiesSelected_Set( properties );            
 
             if( this.propertiesSelectedStr == 'all'){
                 this.propertiesSelected_Set( layer.kFrames.map( par => par.name ) );
             }
+
             
         },
 
@@ -637,8 +678,6 @@ export default{
                 this.frameNo = tFrame;
 
             }
-            
-            
             
             this.divFindName = nName.substring(1);
             this.onDivFindName( properties );
@@ -689,6 +728,29 @@ export default{
             }
 
             
+        },
+
+        getAnimeOfNode_layer( layer ){
+            // get animation settings for this kays
+            let fNo = this.frameNo;
+            let propNow = toRaw(this.propertiesSelected);
+            let kFrames = layer.kFrames;
+
+            let tr = -1;
+            for( let kf of kFrames){
+                if( propNow.includes( kf.name ) ){
+                    if( kf.lHelpers[ fNo ] != null ){
+                        tr = toRaw( kf.lHelpers[ fNo ].orgAdd.animeOpts );
+                    }
+
+                }
+            }
+            
+            //debugger
+            if( tr == -1 ) tr = {type:'set'};
+            console.log('anime opts from click: ',tr);
+            return tr;
+
         },
 
 
@@ -742,7 +804,7 @@ export default{
         
         this.propertiesSelected_Set( Object.keys( tr ) );
         return {
-                'animeOpts': 'set',
+                'animeOpts': JSON.parse(JSON.stringify(toRaw(this.animeSelected))),
                 'css': css,
                 'keys': tr
             };
@@ -832,7 +894,8 @@ export default{
 
                     } else {
                         kFrame.keys[ cFrame ] = q.keys[ cssk ];
-                        console.info( ' [i] update key ['+cssk+']   to ['+kFrame.keys[ cFrame ]+']');
+                        console.info( ' [i] update key ['+cssk+']   to [',
+                            kFrame.keys[ cFrame ],'] \n q: \n',q);
                         kFrame.lHelpers[ cFrame ].update( q.animeOpts, q.keys[ cssk ] );
                     }
                     
@@ -856,6 +919,22 @@ export default{
 
 .debBorders{
     border: solid 1px red;
+    border-radius: 5px;
+}
+
+.nstBubbleDiv{
+    border-radius: 7px;
+    border: solid #1b3ad5 2px;
+    margin-bottom:5px;
+    margin-right:2px;
+    margin:0px;
+    padding-top:5px;
+    padding-bottom:5px;
+    padding-right:5px;
+    display:unset;
+    background-color: #ffebeb;
+}
+.nstBubbleDiv input{
     border-radius: 5px;
 }
 

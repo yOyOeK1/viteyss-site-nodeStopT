@@ -1,9 +1,9 @@
 <template>
 
 
-    <div v-if="!isClose">
+    <div v-if="!isClose"  style="display: inline;" >
 
-        <div
+        <div v-show="false"
             @click="isClose=true"
             style="display: inline;
                 border-radius:5px; 
@@ -12,7 +12,7 @@
             <i class="fa-solid fa-arrow-left"></i>
         </div>
 
-        <div style="border-radius: 5px; border: dotted 3px black;">
+        <div style="border-radius: 5px; border: dotted 3px black; display: inline;">
             
             <input type="text" :value="nValue" ref="myManipulator" name="setNewValueAsInput"
                 @change="onSend_RAWMsg7()" 
@@ -21,12 +21,12 @@
 
         </div>
 
-
         
     </div>
 
 
     <div v-else
+        v-show="false"
         @click="isClose=false">
         <i class="fa-solid fa-wrench"></i>
 

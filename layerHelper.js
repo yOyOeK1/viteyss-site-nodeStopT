@@ -6,16 +6,27 @@ class layerHelper{
     constructor( nst, layer, propEntry, atFrame ){
         this.nst = nst;
         this.l = layer
+        this.divName = `${this.l.divName}`;
+        if( this.divName == '' ){
+            console.error('EE div name error :',this.l.divName);
+        }
 
-        this.timeLine = nst.timeLine;
+        this.timeLine = toRaw( nst.timeLine );
+        //this.timeLine = nst.timeLine;
         this.propEntry = propEntry;
-        this.propKeys = propEntry.keys,
+        this.propKeys = toRaw(propEntry.keys), 
         this.propName = propEntry.name;
         this.atFrame = atFrame;
         this.atFrameMs = parseInt(atFrame*nst.frameMs);
         this.frameNoRange = [-1, atFrame];
+        this.frameMsRange = [0,0];
+        this.duration = 0;
 
-        this.tl_label = 'setXX'+this.l.divName.substring(1)+'XX'+this.propName+'XX'+this.atFrame;
+        this.aJs = -1;
+        this.aJs_atTimeLine = -1;
+
+
+        this.tl_label = 's'+this.divName.substring(1)+'XX'+this.propName+'XX'+this.atFrame;
         this.orgAdd = -1;
 
        
@@ -29,8 +40,9 @@ class layerHelper{
     frameNoRange_update=()=>{
 
         let toLeftKId = this.atFrame-1;
-        let rpk = toRaw( this.propKeys );
-        for(; toLeftKId>0; toLeftKId--){
+        let rpk = this.propKeys ;
+
+        for(; toLeftKId>=0; toLeftKId--){
             if( rpk[ toLeftKId ] != null ){
                 toLeftKId++;
                 break;
@@ -38,65 +50,120 @@ class layerHelper{
         }
         if( toLeftKId == -1 ) toLeftKId = 0;
 
+
+
+        let oldRange = this.frameNoRange[0];
+        let calculaterToLeftId = toLeftKId;
         
+
+
         // first one
         if( this.frameNoRange[0] == -1  ){
             this.frameNoRange[0] = toLeftKId;
-
-        // same no action
+            
+            // same no action
         }else if( this.frameNoRange[0] == toLeftKId ){
-
-        // new one need to rebuild
+            
+            // new one need to rebuild
         }else if( this.frameNoRange[0] != toLeftKId ){
-            this.timeLine.remove( this.tl_label );
+
+            if( this.aJs != -1 )
+                this.timeLine.remove( this.tl_label );
             this.frameNoRange[0] = toLeftKId;
             this.add( this.orgAdd.animeOpts, this.orgAdd.valueOpts, false );
             
         }
+        
 
         this.frameMsRange = [
             this.frameNoRange[0] * this.nst.frameMs,
             this.frameNoRange[1] * this.nst.frameMs,
         ];
+        this.duration = this.frameMsRange[1]-this.frameMsRange[0]+this.nst.frameMs-1;
 
     }
 
     update=(  animeOpts, valueOpts, doFrameNoRange_update = false )=>{
-        this.timeLine.remove( this.tl_label );
+        if( this.aJs != -1 ){
+            this.timeLine.remove( this.tl_label );
+        }
+        console.log('update ..'+this.atFrame+'... do frame No range update ',doFrameNoRange_update);
         this.add( animeOpts, valueOpts, doFrameNoRange_update );
     }
 
     add=(  animeOpts, valueOpts, doFrameNoRange_update = true )=>{
+
         this.orgAdd = { animeOpts, valueOpts };
                 
         if( doFrameNoRange_update ) this.frameNoRange_update();
-        let deb = ['R/obj/ ['+this.tl_label+']  '+this.l.divName+' CALL @ '+this.atFrameMs+'ms',
-                    '\n in range frames ',this.frameNoRange.join('...'),
-                    '\n ------ valueOpts: ',valueOpts
-                 ];
+        let deb = '';
 
-        if( animeOpts == 'set' ){
+                 
+        let opts = {};
+        opts['from'] = {};
+        opts['from'][ this.propName ] = valueOpts;
+        
+        
+        if( animeOpts.type == 'set' ){
+            let tStart = parseInt( this.atFrameMs);
+            //opts['duration'] = 1;
+            delete opts['composition'];
 
-            let opts = {};
-            opts[ this.propName ] = valueOpts;
-
-            this.timeLine.label( this.tl_label,
-                this.atFrameMs )
-            this.timeLine.call(()=>{
-                    console.log( deb );
-                },
-                this.tl_label )
-            this.timeLine.set( this.l.divName, opts, this.tl_label);
-
-            console.log('added at ',this.atFrameMs,'ms label ['+this.tl_label+'] ',
+            //opts['target'] = this.divName;
+            
+            
+            deb = 'R/obj/ ['+this.tl_label+'] (set) CALL @ '+tStart+'ms '+
+            '\n in range frames '+this.frameNoRange.join('...')+
+            '\n in duration: '+this.duration+
+            '\n ------ valueOpts: '+valueOpts+
+            '\n opts:'+JSON.stringify(opts,null,4)+'\n'+
+            '\n divName: '+this.divName+
+            '\n'+new Date();
+            
+            
+            //this.timeLine.label( this.tl_label,tStart )            
+            //this.timeLine.call(()=>{ console.log( deb ); }, this.tl_label );
+            
+            console.log('added (set) at ',tStart,'ms label ['+this.tl_label+']',
                 '\n opts:',opts,'\n',
-                deb);
+                '\n deb: ',deb);
+            this.aJs = opts;
+            this.aJs_atTimeLine = tStart;
+            this.timeLine.label( this.tl_label, tStart ).set( this.divName, this.aJs , this.tl_label);
 
 
+        }else if( animeOpts.type == 'animate' ){       
+            let tStart = this.frameMsRange[0];
+                        
+            opts['alternate'] = animeOpts.alternate;
+            opts['autoplay'] = animeOpts.autoplay;
+            opts['loop'] = animeOpts.loop;
+            opts['duration'] = this.duration;
+            //opts['target'] = this.divName;
+            if( 'onBegin' in animeOpts ) opts['onBegin'] = animeOpts.onBegin;
+            
+            //this.orgAdd.animeOpts = opts;
 
+
+            deb = 'R/obj/ ['+this.tl_label+'] (set) CALL @ '+tStart+'ms '+
+                    '\n in range frames '+this.frameNoRange.join('...')+
+                    '\n in duration: '+this.duration+
+                    '\n ------ valueOpts: '+valueOpts+
+                    '\n opts:'+JSON.stringify(opts,null,4)+'\n'+
+                    '\n divName: '+this.divName+
+                    '\n'+new Date();
+            console.log('added (animejs) at ',tStart,'ms label ['+this.tl_label+']',
+                '\n opts:',opts,'\n',
+                '\n deb: ',deb);
+
+            this.aJs = opts;
+            this.aJs_atTimeLine = tStart;
+            //this.timeLine.label( this.tl_label, tStat )
+            //this.timeLine.call(()=>{ console.log( deb ); }, this.tl_label );
+            this.timeLine.label( this.tl_label, tStart ).add( this.divName, this.aJs, this.tl_label );
+            
         }
         
-                
 
         this.emitToRight();
 

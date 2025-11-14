@@ -38,7 +38,7 @@ class site{
       <div 
         id="dA"
         style="width:20px;height:20px;position:fixed;
-          left:250px;top:20px;
+          left:250px;top:30px;
           background-color:orange;"
           onclick="$('#dA').css('left',parseInt(100.00*Math.random()));$('#dA').css('top',parseInt(100.00*Math.random()));"
           >
@@ -47,7 +47,7 @@ class site{
       <div 
         id="dB"
         style="width:20px;height:20px;position:fixed;
-          left:200px;top:20px;
+          left:200px;top:30px;
           background-color:brown;"
           onclick="setOpts.Dragging_start(this,e=>{
              //console.log('dragg',e);
