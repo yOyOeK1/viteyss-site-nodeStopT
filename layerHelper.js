@@ -5,6 +5,8 @@ import {animate as ajsanimate } from 'animejs';
 import { createTimeline as ajscreateTimeline } from 'animejs/timeline';
 //window['aajjs'] = animate;
 
+
+
 class layerHelper{
 
     constructor( nst, layer, propEntry, atFrame ){
@@ -190,7 +192,7 @@ class layerHelper{
 }
 
 
-let layers_to_saveJson=( nst, layers, opts = { 
+let layers_to_saveJson_noMore=( nst, layers, opts = { 
             localStorageH: true,
             //asName: '' 
         }   ) => {
@@ -299,104 +301,18 @@ let layers_from_json=( nst, json, opts )=>{
 
 
 function layers_to_timeLine( layers, metadata ){
-    let tr = [];
-    let tl = ajscreateTimeline({
-        autoplay:false,
-        ease: 'linear',
-        //duration: metadata.framesTotalMs,
-        onUpdate:self=>{
-            console.log('R/tik @ ',self._currentTime+' ms.');
-        }
-    });
-    //tl.fps = metadata.fps;
-    //tl.duration = metadata.framesTotalMs;
-
     
-    layers.forEach( layer =>{
-        let divName = layer.divName;
-        let propName = '';
-        let propVal = '';
-        let animOpts = '';
-        let frameLast = 0;
-        let optLast = -1;
-        let vLast = -1
-
-        layer.kFrames.forEach( kf => {
-            propName = kf.name;
-            frameLast = 0;
-            vLast = -1;
-
-            kf.keys.forEach((v,i)=>{
-                propVal = v;
-                animOpts = kf.lHelpers[ i ];
-                let tStart = i * metadata.frameMs;
-                
-                let opt = {};
-
-                if( animOpts.type == 'set' ){
-
-                    opt[ propName ] = propVal;
-                    delete opt['duration'];
-                    delete opt['composition'];
-                    //debugger
-                    tl.set( divName, opt, tStart );
-
-                }else{
-                    
-                    tStart = (frameLast) * metadata.frameMs+1;
-                    opt = JSON.parse( JSON.stringify( animOpts ) );
-                    delete opt['type'];
-                    opt['duration'] = (i-frameLast) * metadata.frameMs-1;
-
-                    let vfrom = '';
-                    let vto = propVal;
-                    if( vLast == -1 ) {
-                        vfrom = vto;
-                    }else{
-                        vfrom = vLast;
-                    }
-
-                    opt[ propName ] = {
-                        'from': vfrom,
-                        'to': vto
-
-                    };//parseFloat(propVal);
-                    //opt['from'] = { };
-                    //opt['from'][ propName ] = vfrom;
-                    //opt['to'] =  {};
-                    //opt['to'][ propName ] =  vto;
-                    //opt['target'] = divName;
-                    if( opt.onBegin == '' ) delete opt['onBegin'];
-
-                    //let ani = aajjs( divName, opt );
-                   // debugger
-                    tl.add( divName, opt, tStart );
-                }
-
-
-                tr.push( { tStart: tStart,
-                    opt: opt,
-                    animOpts: animOpts
-                } );
-
-                frameLast = i;
-                vLast = propVal;
-
-            });
-
-
-
-        });
-
-
-    });
-
-    return { trDebug:tr, timeLine: tl };
 }
+
+
+
+
+
 
 
 export{ 
     layerHelper,
-    layers_to_saveJson, layers_from_json,
-    layers_to_timeLine
+    //layers_to_saveJson, // move to nstLib.js
+    layers_from_json,
+    //layers_to_timeLine
  }

@@ -253,19 +253,19 @@
 
 import { toRaw,reactive,ref } from 'vue';
 //import NstKF from './nstKF.vue';
-import { layerHelper, 
-    layers_to_saveJson, layers_from_json, 
-    layers_to_timeLine} from '../layerHelper';
+import {  
+    //layers_to_saveJson, 
+    //layers_from_json, 
+   // layers_to_timeLine
+   } from '../layerHelper';
 import NstPropSelector from './nstPropSelector.vue';
 import NstValueManipulator from './nstValueManipulator.vue';
 import NstAnimSelector from './nstAnimSelector.vue';
+import { nstLib } from '../nstLib';
 //import nstProperty from './nstProperty.vue';
 
 let nstTLMSDiv = -1;
 
-let metadata = {};
-         
-window['TLine'] = {};
 
 
 export default{
@@ -315,34 +315,19 @@ export default{
         let frameMs = parseInt( 1000.00 / fps );
         let framesTotalMs = frameMs* (framesTotal-1);
 
-
-
-
-
-        
-        /*
-        let timeLine = aajs.createTimeline({
-                autoplay:false,
-                ease: 'linear',
-                onUpdate:self=>{
-                    console.log('R/tik @ '+this.frameNoAtMs+'ms');
-                    nstTLMSDiv.html('R/tik @ '+this.frameNoAtMs+'ms');
-                }
-            });*/
-
         let nstTLMS = -1;
         let cellWidth = (window.innerWidth - 100) / (framesTotal - 1) ;
 
 
-        
-        window['TLine'] = {
-            timeLine: -1,
-            frameMs: frameMs,
-            framesTotalMs: framesTotalMs
-        };
-
-
         return {
+            nstLibO: new nstLib(),
+            metadata: {
+                fps: fps,
+                framesTotal: framesTotal,
+                timeLine: -1,
+                frameMs: frameMs,
+                framesTotalMs: framesTotalMs
+            },
             
             isPlaying: false,
             replayTimeScale: 1.0,
@@ -444,10 +429,10 @@ export default{
                 '\nframeNoAtMs: '+this.frameNoAtMs+" ms."
             );
 
-            if( window['TLine'].timeLine != -1 ){
+            if( this.metadata.timeLine != -1 ){
                 //this.timeLine.stretch( this.framesTotalMs );
-                console.log('timeLine seek to :', window['TLine'].timeLine, ms);
-                window['TLine'].timeLine.seek( ms );
+                console.log('timeLine seek to :', this.metadata.timeLine, ms);
+                this.metadata.timeLine.seek( ms );
                 //this.timeLine.stretch( this.framesTotalMs / this.replayTimeScale );
             }
             //this.onSeekSet();
@@ -553,34 +538,52 @@ export default{
         },
 
 
-        onLoadToLocal(){
+        async onLoadToLocal(){
+            
+            let f = await iFs.readFile('nst_v3_1.ajs');
+            let fj = JSON.parse( f );
+            
+            
+            
+            
+            let TlRes = this.nstLibO.getTimeline_FromJsonData( fj );
+            //debugger
+            this.layers = fj.layers;
+            this.metadata.timeLine = TlRes.timeLine;
+            //this.lSelected = -1;
+            //this.frameNo = 0;
+            console.log(' on load to lacal.....',TlRes);
+
+
+            
+            $.toast(`Loaded<br>
+                fps: ${fj.metadata.fps}<br>
+                frames: ${fj.metadata.framesTotal}`);
+
+            return 1;
             let j = JSON.parse(localStorageH.getK( 'nst/v2/1' ));
             let loadRes = layers_from_json( this, j );
             
-            console.log(' on load to lacal.....',loadRes);
             this.layers = loadRes;
             //this.lookForKeyFramesToBuild();
             this.frameNo = 0;
-            $.toast(`Loaded<br>
-                fps: ${j.fps}<br>
-                frames: ${j.framesTotal}`);
         },
 
-        onSaveToLocal(){
-            let res = layers_to_saveJson( this, toRaw(this.layers),{ 
-                localStorageH: true,
-                asName: 'nst/v2/1' 
-            } );
+        async onSaveToLocal(){
+            let res2 = this.nstLibO.layers_toStr( toRaw(this.layers), toRaw( this.metadata ) );
 
-            if( res.data.layers.length == 0 ){
-                $.toast('No layers to save');
-            }else{
-                $.toast(
-                    'Layers save in local storage<br>'+
-                    '<small>Adress:</small> '+res.saveAdr
-                );
-            }
+            let asName = 'nst_v3_1.ajs'; 
 
+
+            const fileExists = await iFs.exists( asName );
+            await iFs.writeFile(asName, JSON.stringify(res2, null, 4) );
+
+            $.toast(
+                'Layers save in local storage<br>'+
+                (fileExists ? 'Overrited<br>':'New<br>')+
+                '<small>Adress:</small> '+asName
+            );
+        
           
         },
 
@@ -926,14 +929,21 @@ export default{
                 }
             }
 
-            let lttlRes = layers_to_timeLine( toRaw(this.layers), {
-                fps: this.fps, framesTotal: this.framesTotal,
-                frameMs: this.frameMs
+
+
+            let lttlRes = this.nstLibO.getTimeline_FromJsonData( {
+                metadata: this.metadata,
+                layers: toRaw (this.layers )
             } );
+
+            //let lttlRes = layers_to_timeLine( toRaw(this.layers), {
+            //    fps: this.fps, framesTotal: this.framesTotal,
+            //    frameMs: this.frameMs
+            //} );
             //debugger
             console.log('timeline rebuild result\n---------------------------------\n',
-            lttlRes);
-            window['TLine'].timeLine = lttlRes.timeLine;
+                lttlRes);
+            this.metadata.timeLine = lttlRes.timeLine;
 
             //this.playSelectionMarker( divName );
             return 1;

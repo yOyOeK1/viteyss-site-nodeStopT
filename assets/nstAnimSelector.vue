@@ -7,58 +7,69 @@
     <div class="debBorders" v-if="asMode == 'edit'">
 
         <div>
-            Key type: 
-        
+            onBegin -
+            <div title="js Function bind - onBegin" 
+                class="nstBubbleDiv">
+                f(<i class="fa-solid fa-rocket"></i>): 
+                <input type="text" v-model="wantState.onBegin"
+                    style="width:100px;"
+                    @change="onChangeKeyType()" />
+            </div> <br></br>
+
+            onComplete - 
+            <div title="js Function bind - onComplete" 
+                class="nstBubbleDiv">
+                f(<i class="fa-solid fa-rocket"></i>): 
+                <input type="text" v-model="wantState.onComplete"
+                    style="width:100px;"
+                    @change="onChangeKeyType()" />
+            </div>
+
+        </div>
+
+        <div>
+            Key type:         
             <select v-model="wantState.type" @change="onChangeKeyType()">
                 <option v-for="atype in typesOfAnimation" 
                     :value="atype" >{{makeStrFirstLeterBig(atype)}}</option>``
             </select>
-
         </div>
 
+
         <div v-show="wantState.type =='animate'">
-            <fieldset>
-                <legend>Settings for animation</legend>
+            Settings for animation:<br></br>
 
-                <div title="Loop" class="nstBubbleDiv">
-                    <i class="fa-solid fa-repeat"></i>
-                    <input type="text" v-model="wantState.loop" 
-                        maxlength="5"
-                        style="width:50px;"
-                        @change="onChangeKeyType()"
-                        />
-                </div>
-                | 
-                <div title="Alternate" 
-                    class="nstBubbleDiv">
-                    <i class="fa-solid fa-left-right"></i>
-                    <input type="checkbox" v-model="wantState.alternate"
-                        @change="onChangeKeyType()" />
-                </div>
-                |
-                <div title="Autoplay" 
-                    class="nstBubbleDiv">
-                    <i class="fa-solid fa-play"></i>
-                    <input type="checkbox" v-model="wantState.autoplay" 
+            <div title="Loop" class="nstBubbleDiv">
+                <i class="fa-solid fa-repeat"></i>
+                <input type="text" v-model="wantState.loop" 
+                    maxlength="5"
+                    style="width:50px;"
+                    @change="onChangeKeyType()"
+                    />
+            </div>
+            | 
+            <div title="Alternate" 
+                class="nstBubbleDiv">
+                <i class="fa-solid fa-left-right"></i>
+                <input type="checkbox" v-model="wantState.alternate"
                     @change="onChangeKeyType()" />
-                </div>
-                |
-                <div title="js Function bind - onBegin" 
-                    class="nstBubbleDiv">
-                    f(<i class="fa-solid fa-rocket"></i>): 
-                    <input type="text" v-model="wantState.onBegin"
-                        style="width:50px;"
-                        @change="onChangeKeyType()" />
-                </div>
-
-
-            </fieldset>
-
-            
+            </div>
+            |
+            <div title="Autoplay" 
+                class="nstBubbleDiv">
+                <i class="fa-solid fa-play"></i>
+                <input type="checkbox" v-model="wantState.autoplay" 
+                @change="onChangeKeyType()" />
+            </div>
+           
 
         </div>
     
     </div>
+
+
+
+
     <div v-else style="border:solid red 2px;">
         <span v-if="asMode != 'viewMini'">
             {{ wantState.type }}
@@ -92,6 +103,11 @@
         <div v-if="wantState.onBegin != ''" 
             :title="'onBegine: ['+wantState.onBegin+']'"  class="nstAniViewCell">
             onBegin f(<i class="fa-solid fa-rocket"></i>):
+            
+        </div>
+        <div v-if="wantState.onComplete != ''" 
+            :title="'onComplete: ['+wantState.onComplete+']'"  class="nstAniViewCell">
+            onComplete f(<i class="fa-solid fa-rocket"></i>):
             
         </div>
     </div>
@@ -159,6 +175,7 @@ export default{
         if( !('alternate' in nSelected )  ) nSelected['alternate'] = false;
         if( !('autoplay' in nSelected )  ) nSelected['autoplay'] = false;
         if( !('onBegin' in nSelected ) ) nSelected['onBegin'] = '';
+        if( !('onComplete' in nSelected ) ) nSelected['onCoplete'] = '';
 
         this.wantState = nSelected;
 
