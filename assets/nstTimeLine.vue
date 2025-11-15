@@ -213,9 +213,17 @@
 
         </div>
 
-
-
     </div>
+
+
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+
+
 
 </template>
 
@@ -246,13 +254,19 @@
 import { toRaw,reactive,ref } from 'vue';
 //import NstKF from './nstKF.vue';
 import { layerHelper, 
-    layers_to_saveJson, layers_from_json } from '../layerHelper';
+    layers_to_saveJson, layers_from_json, 
+    layers_to_timeLine} from '../layerHelper';
 import NstPropSelector from './nstPropSelector.vue';
 import NstValueManipulator from './nstValueManipulator.vue';
 import NstAnimSelector from './nstAnimSelector.vue';
 //import nstProperty from './nstProperty.vue';
 
 let nstTLMSDiv = -1;
+
+let metadata = {};
+         
+window['TLine'] = {};
+
 
 export default{
     components:{ 
@@ -266,22 +280,23 @@ export default{
         console.log('nstTimeLine mounted ');
         //window['cycle'] = decycle;
 
+        if(0){
+            setTimeout(()=>{
+                this.timeLine.label('start', 0 )
         
-        setTimeout(()=>{
-            this.timeLine.label('start', 0 )
-    
-            .call(()=>{ 
-                console.log('R/tl START @ 0ms');
-                nstTLMSDiv.append(', R/tl START @ 0ms');
-    
-            }, 0);
-            this.timeLine.label('end', this.framesTotalMs )
-            .call(()=>{ 
-                console.log('R/tl END @ '+this.framesTotalMs+'ms');
-                nstTLMSDiv.append(', R/tl END @ '+this.framesTotalMs+'ms');
-            }, this.framesTotalMs)
+                .call(()=>{ 
+                    console.log('R/tl START @ 0ms');
+                    nstTLMSDiv.append(', R/tl START @ 0ms');
+        
+                }, 0);
+                this.timeLine.label('end', this.framesTotalMs )
+                .call(()=>{ 
+                    console.log('R/tl END @ '+this.framesTotalMs+'ms');
+                    nstTLMSDiv.append(', R/tl END @ '+this.framesTotalMs+'ms');
+                }, this.framesTotalMs)
 
-        },200);
+            },200);
+        }
 
 
         setTimeout(()=>{
@@ -295,7 +310,7 @@ export default{
     data(){
 
         let fps = 10.00;
-        let framesTotal = 19;
+        let framesTotal = 20;
 
         let frameMs = parseInt( 1000.00 / fps );
         let framesTotalMs = frameMs* (framesTotal-1);
@@ -305,7 +320,7 @@ export default{
 
 
         
-
+        /*
         let timeLine = aajs.createTimeline({
                 autoplay:false,
                 ease: 'linear',
@@ -313,14 +328,18 @@ export default{
                     console.log('R/tik @ '+this.frameNoAtMs+'ms');
                     nstTLMSDiv.html('R/tik @ '+this.frameNoAtMs+'ms');
                 }
-            });
+            });*/
 
         let nstTLMS = -1;
         let cellWidth = (window.innerWidth - 100) / (framesTotal - 1) ;
 
 
         
-
+        window['TLine'] = {
+            timeLine: -1,
+            frameMs: frameMs,
+            framesTotalMs: framesTotalMs
+        };
 
 
         return {
@@ -362,8 +381,9 @@ export default{
                 propertiesNow:{}
             },
             */
-            timeLine: timeLine,
+            timeLine: null,
             timeLineStack:[],
+            
             nstTLMS: nstTLMS,
 
             animeSelected:{ type: 'set' },
@@ -404,7 +424,7 @@ export default{
     watch:{
         replayTimeScale( nScale, oScale ){
             this.replayTimeScale = nScale;
-            this.timeLine.speed = nScale;
+            //this.timeLine.speed = nScale;
         },
         frameNo( nframe, oframe ){
 
@@ -412,20 +432,22 @@ export default{
                 this.frameNo = 0;
             else if( nframe >= this.framesTotal )
                 this.frameNo = this.framesTotal-1;
-            else
-                console.log('(watch2) nframe in range so ok ',this.frameNo);
+            //else
+             //   console.log('(watch2) nframe in range so ok ',this.frameNo);
 
 
+             let ms = this.msAtFrame( this.frameNo );
 
-            this.frameNoAtMs = this.msAtFrame( this.frameNo );
+            this.frameNoAtMs = ms;
             //this.frameNo = nframe;
             if( 0 ) console.log('(watch) frameNo changed ! ',nframe,' from ',oframe,
                 '\nframeNoAtMs: '+this.frameNoAtMs+" ms."
             );
 
-            if( this.timeLine != null ){
+            if( window['TLine'].timeLine != -1 ){
                 //this.timeLine.stretch( this.framesTotalMs );
-                this.timeLine.seek( this.frameNoAtMs );
+                console.log('timeLine seek to :', window['TLine'].timeLine, ms);
+                window['TLine'].timeLine.seek( ms );
                 //this.timeLine.stretch( this.framesTotalMs / this.replayTimeScale );
             }
             //this.onSeekSet();
@@ -571,7 +593,7 @@ export default{
             if( this.frameNo == this.framesTotal-1 )
             this.frameNo = 0;
 
-            this.timeLine.resume();
+            //this.timeLine.resume();
 
             this.onPlayIter();
             //this.timeLine.play();
@@ -600,7 +622,7 @@ export default{
 
         onStop(){
             this.isPlaying = false;
-            this.timeLine.pause()
+            //this.timeLine.pause()
             clearInterval(this.iterator);
         },
 
@@ -814,16 +836,20 @@ export default{
 
         
         getKFrameByName( kFrameName, kFrames ){
-            console.log(' name : ['+kFrameName+'] kframes:',kFrames);
             if( kFrames.length == 0 ) return [];
-            let res = kFrames.find( kf => {
-                console.log('       - kf property ',kf);
-                return kf.name === kFrameName;
+            
+            let kFramesR = toRaw( kFrames );
+            //console.log(' name : ['+kFrameName+'] kframes:',kFrames);
+
+
+            let res = kFramesR.find( kf => {
+                //console.log('       - kf property ',kf);
+                return kf.name == kFrameName;
             });
-            console.log('res ', res );
+            //console.log('res ', res );
             if( res != undefined ) return res;
             else{
-                console.error('ee wrong count of kFrames by name ['+kFrameName+'] res:\n',res);
+                //console.error('ee wrong count of kFrames by name ['+kFrameName+'] res:\n',res);
                 return -1;
             }
 
@@ -878,8 +904,7 @@ export default{
                     };
                     
                     kFrame.keys[cFrame] = q.keys[ cssk ];
-                    kFrame.lHelpers[ cFrame ] = new layerHelper( this, layer, kFrame, cFrame );
-                    kFrame.lHelpers[ cFrame ].add( q.animeOpts, q.keys[ cssk ] );
+                    kFrame.lHelpers[ cFrame ] = q.animeOpts;
 
                     layer.kFrames.push( kFrame );
                     
@@ -889,18 +914,26 @@ export default{
                     if( kFrame.keys[ cFrame ] == null ){
                         kFrame.keys[ cFrame ] = q.keys[ cssk ];
                         console.info( ' [i] adding key ['+cssk+'] at frameNo ?',cFrame, deb?kFrame:'');
-                        kFrame.lHelpers[ cFrame ] = new layerHelper( this, layer, kFrame, cFrame );
-                        kFrame.lHelpers[ cFrame ].add( q.animeOpts, q.keys[ cssk ] );
+                        kFrame.lHelpers[ cFrame ] = q.animeOpts;
 
                     } else {
                         kFrame.keys[ cFrame ] = q.keys[ cssk ];
                         console.info( ' [i] update key ['+cssk+']   to [',
                             kFrame.keys[ cFrame ],'] \n q: \n',q);
-                        kFrame.lHelpers[ cFrame ].update( q.animeOpts, q.keys[ cssk ] );
+                        kFrame.lHelpers[ cFrame ] = q.animeOpts;
                     }
                     
                 }
             }
+
+            let lttlRes = layers_to_timeLine( toRaw(this.layers), {
+                fps: this.fps, framesTotal: this.framesTotal,
+                frameMs: this.frameMs
+            } );
+            //debugger
+            console.log('timeline rebuild result\n---------------------------------\n',
+            lttlRes);
+            window['TLine'].timeLine = lttlRes.timeLine;
 
             //this.playSelectionMarker( divName );
             return 1;
