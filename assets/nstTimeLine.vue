@@ -760,12 +760,12 @@ export default{
             let fNo = this.frameNo;
             let propNow = toRaw(this.propertiesSelected);
             let kFrames = layer.kFrames;
-
+            
             let tr = -1;
             for( let kf of kFrames){
                 if( propNow.includes( kf.name ) ){
                     if( kf.lHelpers[ fNo ] != null ){
-                        tr = toRaw( kf.lHelpers[ fNo ].orgAdd.animeOpts );
+                        tr = kf.lHelpers[ fNo ];
                     }
 
                 }

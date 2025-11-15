@@ -57,6 +57,29 @@ class site{
           >
           dB</div>
 
+
+
+      <div 
+        id="dDivSvg"
+        style="position:fixed;
+          left:360px;top:30px;
+          -webkit-touch-callout: none;
+          -webkit-user-select: none;
+          -khtml-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+          
+          onclick="setOpts.Dragging_start(this,e=>{
+             //console.log('dragg',e);
+             $('#dDivSvg').css('left',e.cXY[0]);
+             $('#dDivSvg').css('top',e.cXY[1]);
+          });"
+          >
+          dB</div>
+
+      
+
     </div>
     
     <div id="appTl"></div>
@@ -67,6 +90,12 @@ class site{
 
   getHtmlAfterLoad = () =>{
     cl(`${this.getName} - getHtmlAfterLoad()`);
+
+    $.get( `${this.homeUrl}MediaAssets/osdMapTest1.svg`, function( data, status ){
+        siteByKey.s_multiSVGPage.o.mulSvgParseGet( data  , status, false, '#dDivSvg' );
+      });
+
+
 
     this.appTL.mount('#appTl');
   }
