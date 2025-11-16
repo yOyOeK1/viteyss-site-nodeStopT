@@ -69,10 +69,14 @@
             </div>
 
             <div class="nstDebugBar">
-                <button @click="lookForKeyFramesToBuild()">R1</button> |
-                <button @click="onSaveToLocal()">save</button> |
-                <button @click="onLoadToLocal()">load</button> |
-                <button @click="divFindName='dB'; onDivFindName([]);onAddKeyFrame()">q?</button> |
+                <button @click="onSaveToLocal()">save</button> | 
+                <button @click="onLoadToLocal()">load</button>
+            </div>
+
+
+            <div class="nstDebugBar">
+                <button @click="onLoad_Start()">fL</button> |
+                <button @click="divFindName='dB'; onDivFindName([]);onAddKeyFrame()">q?</button>
             </div>
 
 
@@ -97,6 +101,14 @@
         </div>
 
 
+
+    </div>
+
+
+    <div class="nstDebugBar" v-if="fileDialogOpen!=10">
+        <NstiFileSystem 
+            :operation="fileDialogOperation"
+            />
 
     </div>
 
@@ -262,6 +274,7 @@ import NstPropSelector from './nstPropSelector.vue';
 import NstValueManipulator from './nstValueManipulator.vue';
 import NstAnimSelector from './nstAnimSelector.vue';
 import { nstLib } from '../nstLib';
+import NstiFs from './nstiFs.vue';
 //import nstProperty from './nstProperty.vue';
 
 let nstTLMSDiv = -1;
@@ -275,6 +288,7 @@ export default{
         "NstPropSelector": NstPropSelector,
         "NstValueManipulator": NstValueManipulator,
         "NstAnimSelector": NstAnimSelector,
+        "NstiFileSystem": NstiFs,
     },
     mounted(){
         console.log('nstTimeLine mounted ');
@@ -379,7 +393,10 @@ export default{
             observe: null,
 
             lSelected:-1,
-            layers:[]
+            layers:[],
+
+            fileDialogOpen: false,
+            fileDialogOperation: '',
 
         };
     },
@@ -538,9 +555,15 @@ export default{
         },
 
 
+        onLoad_Start(){
+            this.fileDialogOpen = true;
+
+        },
+
         async onLoadToLocal(){
             
-            let f = await iFs.readFile('nst_v3_1.ajs');
+            
+            let f = await iFs.readFile('nst/nst_v3_1.ajs');
             let fj = JSON.parse( f );
             
             
@@ -561,20 +584,15 @@ export default{
                 frames: ${fj.metadata.framesTotal}`);
 
             return 1;
-            let j = JSON.parse(localStorageH.getK( 'nst/v2/1' ));
-            let loadRes = layers_from_json( this, j );
             
-            this.layers = loadRes;
-            //this.lookForKeyFramesToBuild();
-            this.frameNo = 0;
         },
 
         async onSaveToLocal(){
             let res2 = this.nstLibO.layers_toStr( toRaw(this.layers), toRaw( this.metadata ) );
 
-            let asName = 'nst_v3_1.ajs'; 
+            let asName = 'nst/nst_v3_1.ajs'; 
 
-
+            
             const fileExists = await iFs.exists( asName );
             await iFs.writeFile(asName, JSON.stringify(res2, null, 4) );
 
