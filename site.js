@@ -3,6 +3,11 @@ import NstTimeLine from "./assets/nstTimeLine.vue";
 
 import SVGInject from '@iconfu/svg-inject';
 
+
+import { nstLib } from './nstLib';
+import curInfNst from './MediaAssets/cursor_info_nst.json';
+
+
 class site{
 
   constructor(){
@@ -162,14 +167,31 @@ class site{
     if( keyCode.key == 'm' ){
       if( this.curInfo == true ){
         document.body.addEventListener('mousemove', this.setMouseTrack);
-        aajs.animate('#dDivCurInfo',{opacity:1});
+        //aajs.animate('#dDivCurInfo',{opacity:1});
+        this.Tlci.reset();
+        this.Tlci.play();
       }else{
-        document.body.removeEventListener('mousemove', this.setMouseTrack);
-        aajs.animate('#dDivCurInfo',{opacity:0});
+        //aajs.animate('#dDivCurInfo',{opacity:0});
+        this.Tlci.reverse();
+        setTimeout(()=>
+          document.body.removeEventListener('mousemove', this.setMouseTrack),
+          1500
+        );
       }
     }
   }
 
+
+
+  onSvgInjectionDone=()=>{
+    // build node stop time START
+    this.nstLibO = new nstLib();
+    let TlRes = this.nstLibO.getTimeline_FromJsonData( curInfNst );
+    this.Tlci = TlRes.timeLine;
+    this.Tlci.reset();
+    console.log('svgd time line ready ....');
+      // build node stop time END
+  }
 
 
   getHtmlAfterLoad = () =>{
@@ -181,7 +203,7 @@ class site{
 
 
     setTimeout(()=>{
-      console.log('svgd on inject ...');
+      console.log('svgd on inject ...',curInfNst);
       SVGInject(document.getElementById( 'dDivCurInfo' ),{
         'useCache': false,
         'makeIdsUnique':false,
@@ -190,9 +212,14 @@ class site{
           $('#ciX').html('X - - - ');
           $('#ciX').attr('x',parseInt($('#ciX').attr('x')));
           //aajs.animate('#dDivCurInfo',{opacity:0,duration:0});
+          this.onSvgInjectionDone();
 
         }
       });
+
+      
+
+
       /*$('#ciX').html('X: '+e.cXY[0]);
       $('#ciY').html('Y: '+e.cXY[1]);
       $('#dDivCurInfo').css('left',e.cXY[0]);

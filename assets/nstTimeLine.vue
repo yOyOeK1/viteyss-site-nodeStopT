@@ -84,17 +84,18 @@
             <div
                 class="nstFindBar">
 
-                <i class="fa-solid fa-bullseye"
+                <button
                     title="Select node from local dome with cursor"
                     @click="onSelectNodeFromDome()"
-                    :style=" 'color:'+(elSelectedIsActive?'red':'black')+';' "
-                    ></i>
-
+                    :style=" 'color:'+(elSelectedIsActive?'red':'white')+';' "
+                    ><i class="fa-solid fa-bullseye"></i>
+                </button>
 
                 #:
                 <input title="Look for div node $('#....')"
                     :placeholder=" elSelectedStr "
                     type="text" v-model="divFindName"
+                    style="width:125px"
                     @change="onDivFindName([])"
                     >
 
@@ -379,6 +380,7 @@ export default{
             
             divFindName:'',
             elSelected:null,
+            elSelectedIsActive: false,
 
 
             /*
@@ -589,14 +591,22 @@ export default{
 
         },
 
-        async onLoadToLocal(){
-            
-            
+        onLoadToLocal(){
+            let onLoadDone = ( msg ) => {
+                console.log('ok so data to load is ',msg);
+                this.onLoadToLocalFromString( msg );
+            }; 
+
+            setOpts.FileDialog('load',{'onDone':onLoadDone});
+        },
+
+        async onLoadToLocal_old(){
             let f = await iFs.readFile('nst/nst_v3_1.ajs');
+            this.onLoadToLocalFromString( f );
+        },
+        
+        onLoadToLocalFromString( f ){
             let fj = JSON.parse( f );
-            
-            
-            
             
             let TlRes = this.nstLibO.getTimeline_FromJsonData( fj );
             //debugger
@@ -616,7 +626,12 @@ export default{
             
         },
 
-        async onSaveToLocal(){
+        onSaveToLocal(){
+            let res2 = this.nstLibO.layers_toStr( toRaw(this.layers), toRaw( this.metadata ) );
+            setOpts.FileDialog('save', JSON.stringify(res2, null, 4) );
+        },
+
+        async onSaveToLocal_old(){
             let res2 = this.nstLibO.layers_toStr( toRaw(this.layers), toRaw( this.metadata ) );
 
             let asName = 'nst/nst_v3_1.ajs'; 
@@ -745,7 +760,7 @@ export default{
                 deactivateSelector();
 
             }
-                       
+
         },
         
 
@@ -820,8 +835,9 @@ export default{
             let compCs = window.getComputedStyle( node );
             compCs.forEach( pName => {
 
-                //fd[ pName ] = compCs.getPropertyValue( pName );
                 fd[ pName ] = node.getAttribute( pName );
+                if( fd[ pName ] == null )
+                    fd[ pName ] = compCs.getPropertyValue( pName );
             });
 
             // observator of changes 

@@ -1,0 +1,515 @@
+{
+    "metadata": {
+        "fps": 10,
+        "framesTotal": 20,
+        "timeLine": -1,
+        "frameMs": 100,
+        "framesTotalMs": 1900
+    },
+    "layers": [
+        {
+            "divName": "#ciX",
+            "order": 0,
+            "isVisible": true,
+            "domType": "html",
+            "domSrcOver": "local",
+            "nodeObservator": null,
+            "obj": "",
+            "frameAddedAt": 0,
+            "kFrames": [
+                {
+                    "name": "x",
+                    "keys": [
+                        "0",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "9"
+                    ],
+                    "lHelpers": [
+                        {
+                            "type": "set"
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": null
+                        }
+                    ]
+                },
+                {
+                    "name": "opacity",
+                    "keys": [
+                        "0",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "1"
+                    ],
+                    "lHelpers": [
+                        {
+                            "type": "set"
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": null
+                        }
+                    ]
+                }
+            ],
+            "propertiesNow": {}
+        },
+        {
+            "divName": "#dDivCurInfo",
+            "order": 0,
+            "isVisible": true,
+            "domType": "html",
+            "domSrcOver": "local",
+            "nodeObservator": null,
+            "obj": "",
+            "frameAddedAt": 19,
+            "kFrames": [
+                {
+                    "name": "opacity",
+                    "keys": [
+                        "0",
+                        "0",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "1"
+                    ],
+                    "lHelpers": [
+                        {
+                            "type": "animate",
+                            "loop": null
+                        },
+                        {
+                            "type": "set"
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": null
+                        }
+                    ]
+                }
+            ],
+            "propertiesNow": {}
+        },
+        {
+            "divName": "#ciRecL",
+            "order": 0,
+            "isVisible": true,
+            "domType": "html",
+            "domSrcOver": "local",
+            "nodeObservator": null,
+            "obj": "",
+            "frameAddedAt": 19,
+            "kFrames": [
+                {
+                    "name": "x",
+                    "keys": [
+                        "9",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "-0.06681738"
+                    ],
+                    "lHelpers": [
+                        {
+                            "type": "set",
+                            "loop": 0,
+                            "alternate": false,
+                            "autoplay": false,
+                            "onBegin": "",
+                            "onCoplete": ""
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": 0,
+                            "alternate": false,
+                            "autoplay": false,
+                            "onBegin": "",
+                            "onCoplete": ""
+                        }
+                    ]
+                }
+            ],
+            "propertiesNow": {}
+        },
+        {
+            "divName": "#ciRecT",
+            "order": 0,
+            "isVisible": true,
+            "domType": "html",
+            "domSrcOver": "local",
+            "nodeObservator": null,
+            "obj": "",
+            "frameAddedAt": 18,
+            "kFrames": [
+                {
+                    "name": "filter",
+                    "keys": [
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "blur(3px)",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "blur(1px)",
+                        null,
+                        null,
+                        "blur(0px)"
+                    ],
+                    "lHelpers": [
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": null
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": null
+                        },
+                        null,
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": null
+                        }
+                    ]
+                }
+            ],
+            "propertiesNow": {}
+        },
+        {
+            "divName": "#ciRecB",
+            "order": 0,
+            "isVisible": true,
+            "domType": "html",
+            "domSrcOver": "local",
+            "nodeObservator": null,
+            "obj": "",
+            "frameAddedAt": 19,
+            "kFrames": [
+                {
+                    "name": "fill",
+                    "keys": [
+                        "rgb(190, 24, 19)",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "rgb(44, 24, 19)",
+                        "rgb(38, 240, 19)",
+                        null,
+                        "rgb(34, 24, 19)",
+                        "rgb(32, 224, 19)",
+                        "rgb(31, 24, 19)",
+                        null,
+                        null,
+                        null,
+                        null,
+                        "rgb(19, 24, 19)"
+                    ],
+                    "lHelpers": [
+                        {
+                            "type": "animate",
+                            "loop": null
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": null
+                        },
+                        {
+                            "type": "animate",
+                            "loop": null
+                        },
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": null
+                        },
+                        {
+                            "type": "animate",
+                            "loop": null
+                        },
+                        {
+                            "type": "animate",
+                            "loop": null
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": null
+                        }
+                    ]
+                }
+            ],
+            "propertiesNow": {}
+        },
+        {
+            "divName": "#ciRecR",
+            "order": 0,
+            "isVisible": true,
+            "domType": "html",
+            "domSrcOver": "local",
+            "nodeObservator": null,
+            "obj": "",
+            "frameAddedAt": 13,
+            "kFrames": [
+                {
+                    "name": "stroke",
+                    "keys": [
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "rgb(5, 5, 255)",
+                        "rgb(5, 255, 255)",
+                        "rgb(225, 255, 255)",
+                        "rgb(25, 25, 25)",
+                        null,
+                        "rgb(255, 255, 255)",
+                        null
+                    ],
+                    "lHelpers": [
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": 0,
+                            "alternate": false,
+                            "autoplay": false,
+                            "onBegin": "",
+                            "onCoplete": ""
+                        },
+                        {
+                            "type": "set",
+                            "loop": 0,
+                            "alternate": false,
+                            "autoplay": false,
+                            "onBegin": "",
+                            "onCoplete": ""
+                        },
+                        {
+                            "type": "set",
+                            "loop": 0,
+                            "alternate": false,
+                            "autoplay": false,
+                            "onBegin": "",
+                            "onCoplete": ""
+                        },
+                        {
+                            "type": "set",
+                            "loop": 0,
+                            "alternate": false,
+                            "autoplay": false,
+                            "onBegin": "",
+                            "onCoplete": ""
+                        },
+                        null,
+                        {
+                            "type": "set",
+                            "loop": 0,
+                            "alternate": false,
+                            "autoplay": false,
+                            "onBegin": "",
+                            "onCoplete": ""
+                        },
+                        null
+                    ]
+                }
+            ],
+            "propertiesNow": {}
+        }
+    ]
+}
