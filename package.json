@@ -15,6 +15,7 @@
   "license": "MIT",
   "description": "Dom Node Stop Time sequancer.",
   "dependencies": {
+    "@iconfu/svg-inject": "^1.2.3",
     "cycle": "^1.0.3"
   },
   "devDependencies": {

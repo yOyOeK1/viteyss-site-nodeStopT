@@ -82,8 +82,18 @@
 
 
             <div
-                class="nstFindBar">#:
+                class="nstFindBar">
+
+                <i class="fa-solid fa-bullseye"
+                    title="Select node from local dome with cursor"
+                    @click="onSelectNodeFromDome()"
+                    :style=" 'color:'+(elSelectedIsActive?'red':'black')+';' "
+                    ></i>
+
+
+                #:
                 <input title="Look for div node $('#....')"
+                    :placeholder=" elSelectedStr "
                     type="text" v-model="divFindName"
                     @change="onDivFindName([])"
                     >
@@ -106,9 +116,11 @@
 
 
     <div class="nstDebugBar" v-if="fileDialogOpen!=10">
-        <NstiFileSystem 
+        <!--
+            <NstiFileSystem 
             :operation="fileDialogOperation"
             />
+            -->
 
     </div>
 
@@ -274,7 +286,8 @@ import NstPropSelector from './nstPropSelector.vue';
 import NstValueManipulator from './nstValueManipulator.vue';
 import NstAnimSelector from './nstAnimSelector.vue';
 import { nstLib } from '../nstLib';
-import NstiFs from './nstiFs.vue';
+import {animate as ajsanimate } from 'animejs';
+//import NstiFs from './nstiFs.vue';
 //import nstProperty from './nstProperty.vue';
 
 let nstTLMSDiv = -1;
@@ -288,7 +301,7 @@ export default{
         "NstPropSelector": NstPropSelector,
         "NstValueManipulator": NstValueManipulator,
         "NstAnimSelector": NstAnimSelector,
-        "NstiFileSystem": NstiFs,
+        //"NstiFileSystem": NstiFs,
     },
     mounted(){
         console.log('nstTimeLine mounted ');
@@ -365,6 +378,9 @@ export default{
             getKeyCellWidth: cellWidth,
             
             divFindName:'',
+            elSelected:null,
+
+
             /*
             divSelectedName: '',
             divSelectedProps: [],
@@ -417,10 +433,23 @@ export default{
         },
         propertiesSelectedNow_computed(){
             return this.propertiesSelectedNow;
-        }
+        },
         //propertiesSelectedNow(){
         //    return this.getPropertiesOfNode_ById( this.divSelectedName.substring(1) );
         //}
+
+        elSelectedStr(){
+            if( this.elSelected === null )
+                return 'by Id';
+            else{
+                let id = this.elSelected.getAttribute('id');
+                let tagName = this.elSelected.tagName;
+                if( id != null )
+                    return 'ok: <'+tagName+'>  #'+id;
+                else
+                    return 'No id . . <'+tagName+'>';
+            };
+        },
 
     },
     watch:{
@@ -498,7 +527,7 @@ export default{
                     domType: 'html',
                     domSrcOver: 'local',
                     nodeObservator: null,
-                    obj: $(divName),
+                    obj: null,//$(divName),
                     frameAddedAt: parseInt( this.frameNo ),
                     kFrames: [],
                     propertiesNow: {}
@@ -660,11 +689,64 @@ export default{
         },
 
 
+        onSelectNodeFromDome(){
+            
+            let onMouseMoveSelector = (e) =>{
+                //console.log('nst-S mouse at ',e.clientX,e.clientY);
+                if( this.elSelected && this.elSelected !== e.target ){
+                    this.elSelected.classList.remove( 'nstSelectorNode' );
+                }
+                if( e.target !== document.body ){
+                    this.elSelected = e.target;
+                    e.target.classList.add( 'nstSelectorNode' );
+                }
+            };
+            let onMouseMoveSelector_out = (e) =>{
+                if( this.elSelected && this.elSelected === e.target ){
+                    this.elSelected.classList.remove( 'nstSelectorNode' );
+                    this.elSelected = null;
+                }
+            };
+            let onMouseMoveSelector_click = (e) =>{
+                console.log('nst-S selected at ',e.clientX,e.clientY,
+                    '\n element is :',e.target
+                );
+                e.stopPropagation();
+                if( this.elSelected != null ){
+                    let id = this.elSelected.getAttribute('id');
+                    this.divFindName = id;
+                    this.onDivFindName(['x']);
+                    deactivateSelector();
+                }
+            };
+
+            let deactivateSelector = () => {
+                document.removeEventListener( 'mouseover', onMouseMoveSelector );
+                document.removeEventListener( 'mouseout', onMouseMoveSelector_out );
+                document.removeEventListener( 'click', onMouseMoveSelector_click );
+                if( this.elSelected != null )
+                    this.elSelected.classList.remove( 'nstSelectorNode' );
+                this.elSelected = null;
+                this.elSelectedIsActive = false;
+            };
+            let activeteSelector = () => {
+                document.addEventListener( 'mouseover', onMouseMoveSelector );
+                document.addEventListener( 'mouseout', onMouseMoveSelector_out );
+                document.addEventListener( 'click', onMouseMoveSelector_click );
+            };
 
 
+            if( this.elSelectedIsActive == false ){
+                this.elSelected = null;
+                this.elSelectedIsActive = true;
+                activeteSelector();
 
+            }else{
+                deactivateSelector();
 
-
+            }
+                       
+        },
         
 
         onDivFindName( properties = [] ){
@@ -673,9 +755,13 @@ export default{
                 ' have ('+lookRes.length+')'
             );
 
+            console.log('[',lookRes,']',' typeof ', typeof lookRes);
+
             if( lookRes.length == 1 ){
                 this.makeSelectedNode_ByDivObj ( lookRes, properties );
                 //console.log('css\n',this.getPropertiesOfNode_ById( this.divFindName ));
+            }else if( lookRes != null ){
+                this.makeSelectedNode_ByDivObj ( lookRes, properties );
             }
 
         },
@@ -732,7 +818,11 @@ export default{
             let node = document.getElementById( byId );
             if( node == undefined ) return undefined;
             let compCs = window.getComputedStyle( node );
-            compCs.forEach( pName => fd[ pName ] = compCs.getPropertyValue( pName ) );
+            compCs.forEach( pName => {
+
+                //fd[ pName ] = compCs.getPropertyValue( pName );
+                fd[ pName ] = node.getAttribute( pName );
+            });
 
             // observator of changes 
             
@@ -803,7 +893,12 @@ export default{
             console.log(` set properties  [${layer.domType}@${layer.domSrcOver}]#[${byId}] of node opts:`+JSON.stringify(opts,null,4) );
 
             if( layer.domSrcOver == 'local' && layer.domType == 'html' ){
-                $( '#'+byId ).css( `${opts.propName}`, `${opts.newValue}` );
+               // $( '#'+byId ).css( `${opts.propName}`, `${opts.newValue}` );
+               let o = { duration: 500, autoplay:true };
+               o[ opts.propName ] = opts.newValue;
+               console.log('so push :',o);
+               ajsanimate( '#'+byId, o );
+               //document.getElementById( byId ).setAttribute( opts.propName, opts.newValue );
 
             } else {
                 //TODO
@@ -1079,6 +1174,13 @@ export default{
 
 .nstFrameCssBlockCellEmpty{
     background-color: rgb(210, 174, 251);
+    
+}
+
+
+.nstSelectorNode{
+    outline: 6px double blue;
+    background-color: rgba(248, 29, 87, 0.1);
     
 }
 

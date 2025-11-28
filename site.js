@@ -1,6 +1,8 @@
 import { createApp } from 'vue';
 import NstTimeLine from "./assets/nstTimeLine.vue";
 
+import SVGInject from '@iconfu/svg-inject';
+
 class site{
 
   constructor(){
@@ -69,16 +71,61 @@ class site{
           -moz-user-select: none;
           -ms-user-select: none;
           user-select: none;
-          
+          " 
           onclick="setOpts.Dragging_start(this,e=>{
              //console.log('dragg',e);
              $('#dDivSvg').css('left',e.cXY[0]);
              $('#dDivSvg').css('top',e.cXY[1]);
           });"
-          >
-          dB</div>
+          > </div>
 
-      
+          <style>
+          .containerSvg {
+            width:fit-content;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-left: auto;
+    margin-right: auto;
+    
+   
+    }
+    </style>
+    <!--
+      <div 
+        id="dDivCurInfo"
+        class="containerSvg"
+        onclick="setOpts.Dragging_start(this,e=>{
+              //console.log('dragg',e);
+              $('#ciX').html('X: '+e.cXY[0]);
+              $('#ciY').html('Y: '+e.cXY[1]);
+              $('#dDivCurInfo').css('left',e.cXY[0]);
+              $('#dDivCurInfo').css('top',e.cXY[1]);
+          });"
+        >
+        </div>
+        
+        
+        -->
+        <img style="position:fixed;left:50;top:0;" 
+        id="dDivCurInfo"
+        src="${this.homeUrl}MediaAssets/cursor_info.svg"
+      onload="console.log('svgd onload');"
+    >
+
+<!--
+
+<object data="${this.homeUrl}MediaAssets/cursor_info.svg" type="image/svg+xml" 
+  id="dDivCurInfo"
+  onclick="setOpts.Dragging_start(this,e=>{
+              //console.log('dragg',e);
+              $('#ciX').html('X: '+e.cXY[0]);
+              $('#ciY').html('Y: '+e.cXY[1]);
+              $('#dDivCurInfo').css('left',e.cXY[0]);
+              $('#dDivCurInfo').css('top',e.cXY[1]);
+          });"></object>
+          -->
+  
 
     </div>
     
@@ -88,6 +135,43 @@ class site{
 
   }
 
+
+  setMouseTrack = ( event ) => {
+  
+    let mouseX = event.clientX;
+    let mouseY = event.clientY;
+
+    $('#ciX').html('X: '+mouseX);
+    $('#ciY').html('Y: '+mouseY);
+
+    $('#dDivCurInfo').css({
+      'left': mouseX-25,
+      'top': mouseY-50,
+    });
+
+  }
+
+
+  onKeypress = ( keyCode ) => {
+    console.log('move cursor info',keyCode.clientX);
+
+    if( this.curInfo == undefined  ) this.curInfo = false;
+
+    this.curInfo = !this.curInfo;
+
+    if( keyCode.key == 'm' ){
+      if( this.curInfo == true ){
+        document.body.addEventListener('mousemove', this.setMouseTrack);
+        aajs.animate('#dDivCurInfo',{opacity:1});
+      }else{
+        document.body.removeEventListener('mousemove', this.setMouseTrack);
+        aajs.animate('#dDivCurInfo',{opacity:0});
+      }
+    }
+  }
+
+
+
   getHtmlAfterLoad = () =>{
     cl(`${this.getName} - getHtmlAfterLoad()`);
 
@@ -95,6 +179,36 @@ class site{
         siteByKey.s_multiSVGPage.o.mulSvgParseGet( data  , status, false, '#dDivSvg' );
       });
 
+
+    setTimeout(()=>{
+      console.log('svgd on inject ...');
+      SVGInject(document.getElementById( 'dDivCurInfo' ),{
+        'useCache': false,
+        'makeIdsUnique':false,
+        'copyAttributes':true,
+        'onAllFinish':()=>{
+          $('#ciX').html('X - - - ');
+          $('#ciX').attr('x',parseInt($('#ciX').attr('x')));
+          //aajs.animate('#dDivCurInfo',{opacity:0,duration:0});
+
+        }
+      });
+      /*$('#ciX').html('X: '+e.cXY[0]);
+      $('#ciY').html('Y: '+e.cXY[1]);
+      $('#dDivCurInfo').css('left',e.cXY[0]);
+      $('#dDivCurInfo').css('top',e.cXY[1]);
+      */
+          
+    },20);
+
+    /*
+    $.get( `${this.homeUrl}MediaAssets/cursor_info.svg`, function( data, status ){
+      //siteByKey.s_multiSVGPage.o.mulSvgParseGet( data  , status, false, '#dDivCurInfo' );
+      let d = data.childNodes[1];
+      $('#dDivCurInfo').html( d );//.childNodes[1] );
+      
+    });
+      */
 
 
     this.appTL.mount('#appTl');
