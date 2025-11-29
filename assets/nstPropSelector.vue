@@ -1,9 +1,10 @@
 <template>
 
 
-    <div class="debBorders" >
-
-        nstPropSelector of <b>({{ divSelectedName }})</b>
+    <div>
+        <!--
+            nstPropSelector of <b>({{ divSelectedName }})</b>
+        -->
 
         
         <div class="debBorders" >
@@ -32,9 +33,7 @@
 
             </div>
         </div>
-        
-        <hr></hr>
-        
+                
         <div class="debBorders" >
             Properties: ({{ Object.keys(properties).length - selected.length }})
         
@@ -146,11 +145,10 @@ export default{
     display: inline-block;
     overflow-y: overlay;
     overflow-x: overlay;
-    border-radius: 5px;
-    border: solid rgb(168, 255, 149) 3px;
-    min-width: 90%;
+    min-width: 100%;
     max-height: 70px;
-    margin: 5px;
+    border-radius: 5px;
+    
 }
 .nstPropItem{
     

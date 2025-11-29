@@ -112,11 +112,11 @@ class site{
         
         
         -->
-        <img style="position:fixed;left:50;top:0;" 
-        id="dDivCurInfo"
-        src="${this.homeUrl}MediaAssets/cursor_info.svg"
-      onload="console.log('svgd onload');"
-    >
+        <img style="position:fixed;left:50;top:0;pointer-events:none;" 
+            id="dDivCurInfo"
+            src="${this.homeUrl}MediaAssets/cursor_info.svg"
+          onload="console.log('svgd onload');"
+        >
 
 <!--
 
@@ -158,27 +158,43 @@ class site{
 
 
   onKeypress = ( keyCode ) => {
-    console.log('move cursor info',keyCode.clientX);
+    
 
-    if( this.curInfo == undefined  ) this.curInfo = false;
+    if( keyCode.key == '?' ){
+      console.log(`Node Stop Time - help
+? - help
+m - cursor info status: [${this.curInfo}]
++ - insert current properties as key frame for selected
+      
+        `);
 
-    this.curInfo = !this.curInfo;
+    }else if( keyCode.key == '+' ){
+      console.log('make key frame by key press (+)');
+      let ctx = this.appTL._instance.ctx;
+      ctx.onAddKeyFrame();
+      ctx.nstTimeSlideInput_focus();
+      $.toast('Key frame inserted !');
 
-    if( keyCode.key == 'm' ){
+    }else if( keyCode.key == 'm' ){
+
+      console.log('move cursor info',keyCode.clientX);
+      if( this.curInfo == undefined  ) this.curInfo = false;
+      this.curInfo = !this.curInfo;
+
       if( this.curInfo == true ){
         document.body.addEventListener('mousemove', this.setMouseTrack);
-        //aajs.animate('#dDivCurInfo',{opacity:1});
         this.Tlci.reset();
         this.Tlci.play();
       }else{
-        //aajs.animate('#dDivCurInfo',{opacity:0});
         this.Tlci.reverse();
         setTimeout(()=>
           document.body.removeEventListener('mousemove', this.setMouseTrack),
           1500
         );
       }
+
     }
+
   }
 
 

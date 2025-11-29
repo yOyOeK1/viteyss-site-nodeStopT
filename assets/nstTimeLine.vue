@@ -19,31 +19,7 @@
 
    
 
-    <div v-if="lSelected != -1"
-        style="border-radius:5px; border:solid blueviolet 2px;padding:5px; margin:5px;">
-        
-        <NstAnimSelector
-            asMode="edit"
-            :layerSelected="layelSelected"
-            :divSelectedName="divSelectedName"
-            :selected="animeSelected"
-            
-            @nst-animation-change="onEmit_setAnimeChange"
-        
-            />
-
-        <NstPropSelector 
-            v-if="1"
-            :layerSelected="layelSelected"
-            :divSelectedName="divSelectedName"
-            :properties="propertiesSelectedNow"
-            :selected="propertiesSelected"
-            
-            @nst-prop-selection-change="propertiesSelectedChange"
-            @nst-value-manipulator="onEmit_setPropertiesOfNobeById"
-        
-            />
-    </div>
+    
         
     <div
         class="nstTimeLine">Tools:<br></br>
@@ -84,12 +60,63 @@
             <div
                 class="nstFindBar">
 
+                
+
                 <button
                     title="Select node from local dome with cursor"
                     @click="onSelectNodeFromDome()"
                     :style=" 'color:'+(elSelectedIsActive?'red':'white')+';' "
                     ><i class="fa-solid fa-bullseye"></i>
                 </button>
+
+
+                <button 
+                    :disabled="lSelected==-1"
+                    @click="showProperties = !showProperties"
+                    >
+                    <i :class="'fa-solid fa-caret-'+(showProperties ? 'up' : 'down')"></i>
+                </button>
+
+                <div 
+                    v-if="lSelected != -1 && showProperties"
+                    style="
+                        border:solid darkolivegreen 4px;
+                        border-radius: 6px;
+                        background-color: gainsboro;
+                        position: fixed;
+                        margin-top:10px;
+                        z-index:1;
+                        padding:5px;
+                        box-shadow: rgb(0, 100, 200) 5px 8px 15px;
+
+                    "
+                    >
+
+                    <NstAnimSelector
+                        asMode="edit"
+                        :layerSelected="layelSelected"
+                        :divSelectedName="divSelectedName"
+                        :selected="animeSelected"
+                        @nst-animation-change="onEmit_setAnimeChange"
+                        />
+
+                    <NstPropSelector 
+                        v-if="1"
+                        :layerSelected="layelSelected"
+                        :divSelectedName="divSelectedName"
+                        :properties="propertiesSelectedNow"
+                        :selected="propertiesSelected"
+                        @nst-prop-selection-change="propertiesSelectedChange"
+                        @nst-value-manipulator="onEmit_setPropertiesOfNobeById"
+                    
+                        />
+                            
+                </div>
+
+
+
+
+
 
                 #:
                 <input title="Look for div node $('#....')"
@@ -102,9 +129,9 @@
                 <button
                     v-if=" lSelected != -1 "
                     id="nstInsertKeyFrameNode"
-                    title="Insert key frame"
+                    title="Insert key frame (+)"
                     @click="onAddKeyFrame();nstTimeSlideInput_focus();"
-                    >+</button>
+                    ><i class="fa-solid fa-plus"></i></button>
                 
 
             </div>
@@ -114,18 +141,6 @@
 
 
     </div>
-
-
-    <div class="nstDebugBar" v-if="fileDialogOpen!=10">
-        <!--
-            <NstiFileSystem 
-            :operation="fileDialogOperation"
-            />
-            -->
-
-    </div>
-
-
 
 
     <div
@@ -405,6 +420,7 @@ export default{
 
             animeSelected:{ type: 'set' },
             propertiesSelected:[],
+            showProperties: true,
             propertiesSelectedNow:{},
             propertiesUpdateDelay:-1,
             observeAtId: null,
@@ -479,7 +495,7 @@ export default{
 
             if( this.metadata.timeLine != -1 ){
                 //this.timeLine.stretch( this.framesTotalMs );
-                console.log('timeLine seek to :', this.metadata.timeLine, ms);
+                //console.log('timeLine seek to :', this.metadata.timeLine, ms);
                 this.metadata.timeLine.seek( ms );
                 //this.timeLine.stretch( this.framesTotalMs / this.replayTimeScale );
             }
@@ -748,6 +764,7 @@ export default{
                 document.addEventListener( 'mouseover', onMouseMoveSelector );
                 document.addEventListener( 'mouseout', onMouseMoveSelector_out );
                 document.addEventListener( 'click', onMouseMoveSelector_click );
+                this.unSelectElement();
             };
 
 
@@ -763,14 +780,28 @@ export default{
 
         },
         
+        unSelectElement(){
+            this.lSelected = -1;
+            this.divFindName = '';
+            this.propertiesSelected = [];
+            this.showProperties = true;
+
+        },
+
 
         onDivFindName( properties = [] ){
             let lookRes = $(`#${this.divFindName}`);
-            console.log('div find name ....'+this.divFindName,
-                ' have ('+lookRes.length+')'
+            console.log('div find name .... ['+this.divFindName,
+                '] have ('+lookRes.length+')'
             );
 
             console.log('[',lookRes,']',' typeof ', typeof lookRes);
+
+            if( this.divFindName == '' ){
+                this.unSelectElement();
+                return 1;
+            }
+
 
             if( lookRes.length == 1 ){
                 this.makeSelectedNode_ByDivObj ( lookRes, properties );
@@ -867,7 +898,7 @@ export default{
             // get properties CSS from node
             let layer = this.layer_getByDivName( '#'+byId );
             console.log(` get properties [${layer.domType}@${layer.domSrcOver}]#[${byId}] of node`);
-
+            
             if( layer.domSrcOver == 'local' && layer.domType == 'html' ){
                 return this.getPropertiesDom_local_html( layer, byId, callBackOnChange );             
 
