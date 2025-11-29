@@ -70,13 +70,6 @@
                 </button>
 
 
-                <button 
-                    :disabled="lSelected==-1"
-                    @click="showProperties = !showProperties"
-                    >
-                    <i :class="'fa-solid fa-caret-'+(showProperties ? 'up' : 'down')"></i>
-                </button>
-
                 <div 
                     v-if="lSelected != -1 && showProperties"
                     style="
@@ -87,6 +80,7 @@
                         margin-top:10px;
                         z-index:1;
                         padding:5px;
+                        max-width:300px;
                         box-shadow: rgb(0, 100, 200) 5px 8px 15px;
 
                     "
@@ -125,6 +119,13 @@
                     style="width:125px"
                     @change="onDivFindName([])"
                     >
+                
+                <button 
+                    :disabled="lSelected==-1"
+                    @click="showProperties = !showProperties"
+                    >
+                    <i :class="'fa-solid fa-caret-'+(showProperties ? 'up' : 'down')"></i>
+                </button>
 
                 <button
                     v-if=" lSelected != -1 "
@@ -608,12 +609,15 @@ export default{
         },
 
         onLoadToLocal(){
+            let fd = null;
             let onLoadDone = ( msg ) => {
                 console.log('ok so data to load is ',msg);
                 this.onLoadToLocalFromString( msg );
+                fd.app.closePanel();
             }; 
 
-            setOpts.FileDialog('load',{'onDone':onLoadDone});
+            fd = setOpts.FileDialog('load',{'onDone':onLoadDone});
+
         },
 
         async onLoadToLocal_old(){

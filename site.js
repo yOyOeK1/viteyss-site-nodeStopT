@@ -213,10 +213,11 @@ m - cursor info status: [${this.curInfo}]
   getHtmlAfterLoad = () =>{
     cl(`${this.getName} - getHtmlAfterLoad()`);
 
+    /*
     $.get( `${this.homeUrl}MediaAssets/osdMapTest1.svg`, function( data, status ){
         siteByKey.s_multiSVGPage.o.mulSvgParseGet( data  , status, false, '#dDivSvg' );
       });
-
+    */
 
     setTimeout(()=>{
       console.log('svgd on inject ...',curInfNst);
