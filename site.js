@@ -25,7 +25,9 @@ class site{
   }
   
   getHtml = () => {
-    this.appTL = createApp(NstTimeLine,{});
+    this.appTL = createApp(NstTimeLine,{
+      homeUrl: this.homeUrl
+    });
     
     return `
     <!--
@@ -84,18 +86,7 @@ class site{
           });"
           > </div>
 
-          <style>
-          .containerSvg {
-            width:fit-content;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    margin-left: auto;
-    margin-right: auto;
-    
-   
-    }
-    </style>
+         
     <!--
       <div 
         id="dDivCurInfo"
@@ -118,18 +109,7 @@ class site{
           onload="console.log('svgd onload');"
         >
 
-<!--
 
-<object data="${this.homeUrl}MediaAssets/cursor_info.svg" type="image/svg+xml" 
-  id="dDivCurInfo"
-  onclick="setOpts.Dragging_start(this,e=>{
-              //console.log('dragg',e);
-              $('#ciX').html('X: '+e.cXY[0]);
-              $('#ciY').html('Y: '+e.cXY[1]);
-              $('#dDivCurInfo').css('left',e.cXY[0]);
-              $('#dDivCurInfo').css('top',e.cXY[1]);
-          });"></object>
-          -->
   
 
     </div>

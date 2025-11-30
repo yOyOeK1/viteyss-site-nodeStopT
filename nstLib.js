@@ -21,9 +21,9 @@ class nstLib{
             autoplay:false,
             ease: 'linear',
             //duration: metadata.framesTotalMs,
-            onUpdate:self=>{
-                console.log('R/tik @ ',self._currentTime+' ms.');
-            }
+            //onUpdate:self=>{
+            //    console.log('R/tik @ ',self._currentTime+' ms.');
+           //}
         });
         //tl.fps = metadata.fps;
         //tl.duration = metadata.framesTotalMs;
@@ -149,4 +149,53 @@ class nstLib{
 }
 
 
-export { nstLib }
+function nstSvgAsset_onload( idd, objThis, positionByDrag = true ){
+    console.log('nstSvgAsset_onload ok idd ',idd);
+    let idde = document.getElementById( idd );
+    SVGInject( objThis, { 'useCache': false, 'makeIdsUnique':false, 'copyAttributes':true,
+        'onAllFinish':()=>{
+            $('#'+idd).css(
+                'left',  
+                parseInt($('#'+idd).css('left').replaceAll('px',''))+1
+            );
+            aajs.animate('#'+idd,{opacity:1,duration:500});     
+
+    }});
+
+    if( positionByDrag )
+        setTimeout(()=>{
+            setOpts.Dragging_start( $('#'+idd), e=>{
+                $('#'+idd).css('left',e.cXY[0]);
+                $('#'+idd).css('top',e.cXY[1]);
+            },e2=>{
+                nstSvgAsset_onDragEnd(idd, e2);
+            });
+        },100);
+}
+
+function nstSvgAsset_onDragEnd( idd, e2 ){
+    console.log('drag done ',idd,'\ne',e2);
+}
+
+function nstImportAsset( pay ){
+    console.log('onAI ', pay);
+    window['nstSvgAsset_onload'] = nstSvgAsset_onload;
+
+    let src = pay.src;
+    let idd = pay.id;
+    
+    if( pay.assetSrc == 'http'&& src.startsWith('./') && src.endsWith('.svg') ){
+        // pointer-events:none;
+        let tr = `<img style="opacity:0;position:fixed;right:50;top:0;" 
+                id="${idd}"
+                src="${pay.homeUrl}${src}"
+                onload="nstSvgAsset_onload('${idd}', this, true);">`;
+        $('body').append( tr );
+
+    }
+    
+   return 0;
+}
+
+
+export { nstLib, nstImportAsset }

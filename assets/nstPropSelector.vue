@@ -26,7 +26,7 @@
                         :nValue="properties[ sProp ]"
                         :nName="sProp"
                         :divName="divSelectedName" 
-                        style="display: inline;" 
+                        style="display: inline; " 
                         @nst-value-manipulator="nstSetPropertyNewValue"/>
 
                 </div>

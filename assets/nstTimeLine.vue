@@ -22,7 +22,10 @@
     
         
     <div
-        class="nstTimeLine">Tools:<br></br>
+        class="nstTimeLine">
+        <!--
+            Tools:<br></br>
+        -->
 
         <div class="nstBox1">
             <div class="nstControlsBar">
@@ -60,7 +63,33 @@
             <div
                 class="nstFindBar">
 
-                
+                <button
+                    title="Import assets to canvas"
+                    @click="onImportAssetsToCanvas()"
+                    ><i class="fa-solid fa-file-import"></i></button>
+
+                <div 
+                    v-if="showImportAssets"
+                    style="
+                        border:solid peru 4px;
+                        border-radius: 6px;
+                        background-color: #ccccfc;
+                        position: fixed;
+                        margin-top:10px;
+                        z-index:1;
+                        padding:5px;
+                        max-width:300px;
+                        box-shadow: rgb(50, 50, 50) 5px 8px 15px;
+
+                    "
+                    >
+                    <NstAssetsImport 
+                        :homeUrl="homeUrl"
+                        @nst-assets-import="onAssetsImport"
+                        />
+
+                </div>
+
 
                 <button
                     title="Select node from local dome with cursor"
@@ -81,7 +110,7 @@
                         z-index:1;
                         padding:5px;
                         max-width:300px;
-                        box-shadow: rgb(0, 100, 200) 5px 8px 15px;
+                        box-shadow: rgb(50, 50, 50) 5px 8px 15px;
 
                     "
                     >
@@ -145,10 +174,13 @@
 
 
     <div
-        class="nstTimeLine">Time:<br></br>
+        class="nstTimeLine">
+        <!--
+            Time:<br></br>
+        -->
 
         <input
-            style="min-width: 100%;"
+            style="min-width: 95%;"
             ref="nstTimeSlideInput"
             type="range"
             min="0"
@@ -163,10 +195,20 @@
     -->
 
     <div
-        class="nstTimeLine">Layers:<br></br>
+        class="nstTimeLine"
+        style="
+            box-shadow: rgb(50,50,50) 0px 5px 10px inset;
+            overflow-x: auto;
+            max-height: 60vh;
+        "
+        >Layers:<br></br>
 
         <div
             v-for="layer in layers"
+             style="
+                    
+                    display: inline-block;
+                "
             >
             
             <div class="nstLayerTopBar">
@@ -302,8 +344,9 @@ import {
 import NstPropSelector from './nstPropSelector.vue';
 import NstValueManipulator from './nstValueManipulator.vue';
 import NstAnimSelector from './nstAnimSelector.vue';
-import { nstLib } from '../nstLib';
+import { nstImportAsset, nstLib } from '../nstLib';
 import {animate as ajsanimate } from 'animejs';
+import NstAssetsImport from './nstAssetsImport.vue';
 //import NstiFs from './nstiFs.vue';
 //import nstProperty from './nstProperty.vue';
 
@@ -318,6 +361,7 @@ export default{
         "NstPropSelector": NstPropSelector,
         "NstValueManipulator": NstValueManipulator,
         "NstAnimSelector": NstAnimSelector,
+        "NstAssetsImport": NstAssetsImport,
         //"NstiFileSystem": NstiFs,
     },
     mounted(){
@@ -351,6 +395,7 @@ export default{
 
         //this.timeLine.restart();
     },
+    props:[ 'homeUrl' ],
     data(){
 
         let fps = 10.00;
@@ -370,7 +415,8 @@ export default{
                 framesTotal: framesTotal,
                 timeLine: -1,
                 frameMs: frameMs,
-                framesTotalMs: framesTotalMs
+                framesTotalMs: framesTotalMs,
+                assets: []
             },
             
             isPlaying: false,
@@ -422,6 +468,7 @@ export default{
             animeSelected:{ type: 'set' },
             propertiesSelected:[],
             showProperties: true,
+            showImportAssets: false,
             propertiesSelectedNow:{},
             propertiesUpdateDelay:-1,
             observeAtId: null,
@@ -626,11 +673,21 @@ export default{
         },
         
         onLoadToLocalFromString( f ){
-            let fj = JSON.parse( f );
             
+            let fj = JSON.parse( f );
+            this.metadata = fj.metadata;
+
+            for( let pay of this.metadata.assets ){                
+                pay['homeUrl'] = this.homeUrl;
+                let res = nstImportAsset( pay );
+                
+            }
+            
+
             let TlRes = this.nstLibO.getTimeline_FromJsonData( fj );
             //debugger
             this.layers = fj.layers;
+
             this.metadata.timeLine = TlRes.timeLine;
             //this.lSelected = -1;
             //this.frameNo = 0;
@@ -721,6 +778,23 @@ export default{
                     to: 1.0
                 },
             });
+        },
+
+        onImportAssetsToCanvas(){
+            this.showImportAssets = !this.showImportAssets;
+        },
+
+        
+        onAssetsImport( pay ){            
+            pay['homeUrl'] = this.homeUrl;
+            let res = nstImportAsset( pay );
+
+            if( res == 0 ){
+                this.metadata.assets.push( pay );
+            }
+
+            this.showImportAssets = false;
+
         },
 
 
