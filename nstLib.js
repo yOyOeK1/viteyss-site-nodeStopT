@@ -250,5 +250,39 @@ async function nstImportAsset( pay ){
    return [0,pay];
 }
 
+var nstConvert = {
+    'matrixTo': ( matrixI )=>{
+        let tr = {
+            'scale': 1.0, 'angle': 0
+        };
+        console.log('nst. matrix To got ['+matrixI+']');
+        if( matrixI == undefined || matrixI == 'none' ) return tr;
 
-export { nstLib, nstImportAsset }
+        matrixI = matrixI.split('(')[1];
+        matrixI = matrixI.split(')')[0];
+        matrixI = matrixI.split(',');
+        let a = matrixI[0];
+        let b = matrixI[1];
+        let c = matrixI[2];
+        let d = matrixI[3];
+        let e = matrixI[4];
+        let f = matrixI[5];
+        
+        tr[ 'scale' ] =  Math.sqrt( a*a + b*b );
+        tr[ 'angle' ] = Math.round( Math.atan2( b, a ) * ( 180/ Math.PI ) );
+        
+        return tr;
+    },
+
+    'calculateAngle':(x1, y1, x2, y2) => {
+        let dy = y2 - y1;
+        let dx = x2 - x1;
+        let angleRadians = Math.atan2(dy, dx);
+        let angleDegrees = angleRadians * (180 / Math.PI);
+        return parseInt( angleDegrees ) ;
+    }
+
+
+};
+
+export { nstLib, nstImportAsset, nstConvert }

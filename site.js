@@ -4,7 +4,7 @@ import NstTimeLine from "./assets/nstTimeLine.vue";
 import SVGInject from '@iconfu/svg-inject';
 
 
-import { nstLib } from './nstLib';
+import { nstConvert, nstLib } from './nstLib';
 import curInfNst from './MediaAssets/cursor_info_nst.json';
 
 
@@ -106,7 +106,12 @@ class site{
         <img style="position:fixed;left:50;top:0;pointer-events:none;" 
             id="dDivCurInfo"
             src="${this.homeUrl}MediaAssets/cursor_info.svg"
-          onload="console.log('svgd onload');"
+          onload="console.log('svgd onload - cursor_info');"
+        >
+        <img style="position:fixed;left:50;top:0;pointer-events:none;opacity:0;" 
+            id="dDivAngInfo"
+            src="${this.homeUrl}MediaAssets/angle_info.svg"
+          onload="console.log('svgd onload - angle_info');"
         >
 
 
@@ -136,17 +141,35 @@ class site{
 
   }
 
-
   onKeypress = ( keyCode ) => {
-    
+    window['nstLastKey'] = keyCode;
+    let focusOn = document.activeElement;
+    console.log('focuse on ['+focusOn.tagName+']');
+    if( focusOn.tagName == 'INPUT' ) return 1;
 
-    if( keyCode.key == '?' ){
+
+    if( keyCode.key == '?' || keyCode.key == 'h' ){
       console.log(`Node Stop Time - help
-? - help
+? | h - help
 m - cursor info status: [${this.curInfo}]
+l - like cursor inspector
 + - insert current properties as key frame for selected
+
+## Manipulators:
+Select node by Id then:
+
+g - to grab / move it with mouse
+r - to rotate in spot by mouse
+s - TODO
+
+q - to Cancel
+
       
         `);
+
+    }else if( keyCode.key == 'l' ){
+      console.log('make cursor like inspector .... (o)');
+      this.appTL._instance.ctx.onSelectNodeFromDome();
 
     }else if( keyCode.key == '+' ){
       console.log('make key frame by key press (+)');
@@ -154,6 +177,78 @@ m - cursor info status: [${this.curInfo}]
       ctx.onAddKeyFrame();
       ctx.nstTimeSlideInput_focus();
       $.toast('Key frame inserted !');
+    
+    }else if( keyCode.key == 'q' ){
+      
+    }else if( keyCode.key == 'r' ){
+      let oTargetId = this.appTL._instance.ctx.$data.divFindName;
+      
+      if( oTargetId == '' ) return 1;
+      let oTarget = $('#'+oTargetId);
+      let orgPos = nstConvert.matrixTo( oTarget.css('transform') );
+      //{
+       // 'rotate': oTarget.attr('tran')!='none'?oTarget.attr('rotate'):0
+      //};
+      oTarget.attr('orgPos', orgPos );
+      
+      let pStart = null;      
+      let onMove = ( e ) =>{
+        if( pStart == null ){
+          pStart = [ e.pageX, e.pageY ];
+          aajs.animate( '#dDivAngInfo', { 'opacity':1, 'left': e.pageX-50, 'top': e.pageY-50, duration: 500 } );
+        }
+        
+        let angle = nstConvert.calculateAngle( pStart[0], pStart[1], e.pageX, e.pageY );
+        
+        //console.log('rotate it to: ',angle, ' org ', orgPos.rotate);
+        
+        //aajs.animate('#angInfoP', {'rotate': angle, duration:2});
+        rotateSvgSetRC( "anglePointMouse", "angInfoCenter",  angle );
+        rotateSvgSetRC( "angInfoB", "angInfoCenter", orgPos.angle + angle );
+        $('#angInfStr').html(`< ${orgPos.angle + angle}\``);
+        $('#angInfStrShadow').html(`< ${orgPos.angle + angle}\``);
+        $('#angInfStr2').html(`${angle}\``);
+          
+        aajs.animate('#'+oTargetId, {'rotate': orgPos.angle + angle, duration:1} );
+      };
+
+      document.body.addEventListener('mousemove', onMove );
+      document.body.addEventListener('mouseup',e=>{
+        console.log('ok rotate done!');
+        document.body.removeEventListener('mousemove', onMove );
+        aajs.animate( '#dDivAngInfo', { 'opacity': 0, duration: 500 });
+        if( nstLastKey.key == 'q' ){
+          aajs.animate('#'+oTargetId, {'rotate': orgPos.angle,duration:500} );
+          
+        }
+      });
+      
+
+    }else if( keyCode.key == 'g' ){
+      let oTargetId = this.appTL._instance.ctx.$data.divFindName;
+      if( oTargetId == '' ) return 1;
+      let oTarget = $('#'+oTargetId);
+      let orgPos = {
+        'left':oTarget.css('left'),
+        'top':oTarget.css('top')
+      };
+      oTarget.attr('orgPos', orgPos );
+      
+      let pStart = null;
+      setOpts.Dragging_start(oTarget,e=>{
+          //console.log('dragg',e);
+          if( pStart == null ){
+            pStart = [ 
+              parseInt( oTarget.css('left').replaceAll('px','')) -e.cXY[0] , 
+              parseInt( oTarget.css('top').replaceAll('px','')) -e.cXY[1] ];
+          }
+          oTarget.css('left',pStart[0]+e.cXY[0]);
+          oTarget.css('top', pStart[1]+e.cXY[1]);
+      }, onDone => {
+        if( nstLastKey.key == 'q' ){
+          aajs.animate('#'+oTargetId, {'left':orgPos.left, 'top':orgPos.top, duration: 500 } );
+        }
+      });
 
     }else if( keyCode.key == 'm' ){
 
@@ -201,6 +296,7 @@ m - cursor info status: [${this.curInfo}]
 
     setTimeout(()=>{
       console.log('svgd on inject ...',curInfNst);
+
       SVGInject(document.getElementById( 'dDivCurInfo' ),{
         'useCache': false,
         'makeIdsUnique':false,
@@ -210,6 +306,19 @@ m - cursor info status: [${this.curInfo}]
           $('#ciX').attr('x',parseInt($('#ciX').attr('x')));
           //aajs.animate('#dDivCurInfo',{opacity:0,duration:0});
           this.onSvgInjectionDone();
+
+        }
+      });
+
+      SVGInject(document.getElementById( 'dDivAngInfo' ),{
+        'useCache': false,
+        'makeIdsUnique':false,
+        'copyAttributes':true,
+        'onAllFinish':()=>{
+          //$('#ciX').html('X - - - ');
+          //$('#ciX').attr('x',parseInt($('#ciX').attr('x')));
+          //aajs.animate('#dDivAngInfo',{opacity:1,duration:0});
+          //this.onSvgInjectionDone();
 
         }
       });
