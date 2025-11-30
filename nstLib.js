@@ -192,13 +192,38 @@ function nstSvgAsset_onDragEnd( idd, e2 ){
 
 }
 
-function nstImportAsset( pay ){
+async function nstImportAsset( pay ){
     console.log('onAI pay:\n', pay);
     window['nstSvgAsset_onload'] = nstSvgAsset_onload;
 
-    let src = pay.src;
+    let src = '';
+    if( pay.src.startsWith('data:image/') )
+        src = pay.src;
+    else
+        src = pay.homeUrl+pay.src;
     let idd = pay.id;
     let drapToPlace = false;
+    let doSvgInject = true;
+    
+    
+    // first load of asset Not resum / load
+    if( !pay.src.startsWith('data:image/') && pay.assetSrc == 'http' && pay.addToAssets == 'bakeIn' && pay.props.left == null ){
+        let assData = await fetch( `${src}` ); 
+        if( !assData.ok ){
+            console.error('EE when fetch assets \n',assData.status);
+            return -1;  
+        } else{
+            let rStr = await assData.text();
+            let asb64 = btoa( rStr );
+            //console.log('got asset\n',rStr);
+            src = 'data:image/svg+xml;base64,'+asb64;
+            pay.src = src;
+            
+        }
+    }
+    // first load of asset Not resum / load END
+
+
     if( pay.props.left == null ){
         pay.props.left = 0;
         drapToPlace = true;
@@ -207,17 +232,22 @@ function nstImportAsset( pay ){
     for(let p of Object.keys( pay.props ) )
         propsStyle+= p+':'+pay.props[p]+';';
     
-    if( pay.assetSrc == 'http'&& src.startsWith('./') && src.endsWith('.svg') ){
+    if( 
+        ( pay.assetSrc == 'http' && src.startsWith('./') && src.endsWith('.svg'))
+        || 
+        doSvgInject == true
+        
+    ){
         // pointer-events:none;
         let tr = `<img style="${propsStyle}" 
-                id="${idd}"
-                src="${pay.homeUrl}${src}"
-                onload="nstSvgAsset_onload('${idd}', this, ${drapToPlace});">`;
+        id="${idd}"
+        src="${src}"
+        onload="nstSvgAsset_onload('${idd}', this, ${drapToPlace});">`;
         $('body').append( tr );
 
     }
     
-   return 0;
+   return [0,pay];
 }
 
 

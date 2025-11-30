@@ -658,7 +658,7 @@ export default{
         onLoadToLocal(){
             let fd = null;
             let onLoadDone = ( msg ) => {
-                console.log('ok so data to load is ',msg);
+                console.log('ok so data to load is \n\n',msg,'\n\n');
                 this.onLoadToLocalFromString( msg );
                 fd.app.closePanel();
             }; 
@@ -792,11 +792,16 @@ export default{
             );
             pay['homeUrl'] = this.homeUrl;
             let res = nstImportAsset( pay );
-
-            if( res == 0 ){
-                this.metadata.assets.push( pay );
-            }
-
+            res.then(ok=>{
+                if( ok[0] == 0 ){
+                    this.metadata.assets.push( ok[1] );
+                }
+                
+            })
+            .catch(e=>{
+                
+            });
+            
             this.showImportAssets = false;
 
         },
