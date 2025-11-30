@@ -53,7 +53,11 @@ export default{
                 id: 'assetInject'+parseInt(Date.now()%10000),
                 assetSrc: impWhat,
                 src: this.fromHttp,
-                addToAssets: this.addToAssets
+                addToAssets: this.addToAssets,
+                props:{
+                    'left': null, 'top': 0, 'opacity': 0.5,
+                    'position':'fixed'
+                }
             });
         }
 

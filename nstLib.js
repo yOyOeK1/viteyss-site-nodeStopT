@@ -158,11 +158,11 @@ function nstSvgAsset_onload( idd, objThis, positionByDrag = true ){
                 'left',  
                 parseInt($('#'+idd).css('left').replaceAll('px',''))+1
             );
-            aajs.animate('#'+idd,{opacity:1,duration:500});     
+            aajs.animate('#'+idd,{opacity:1,duration:100});     
 
     }});
 
-    if( positionByDrag )
+    if( positionByDrag == true )
         setTimeout(()=>{
             setOpts.Dragging_start( $('#'+idd), e=>{
                 $('#'+idd).css('left',e.cXY[0]);
@@ -175,21 +175,44 @@ function nstSvgAsset_onload( idd, objThis, positionByDrag = true ){
 
 function nstSvgAsset_onDragEnd( idd, e2 ){
     console.log('drag done ',idd,'\ne',e2);
+
+    let obj = $('#'+idd);
+    let assets = pager._page.appTL._instance.ctx.$data.metadata.assets;
+    
+    let idAs = assets.findIndex( a => a.id === idd );
+    if( idAs == -1 )
+        return -1;
+
+    assets[ idAs ]['props']= {
+        'top': obj.css('top'),
+        'left': obj.css('left'),
+        'opacity': obj.css('opacity'),
+        'position': obj.css('position')
+    }; 
+
 }
 
 function nstImportAsset( pay ){
-    console.log('onAI ', pay);
+    console.log('onAI pay:\n', pay);
     window['nstSvgAsset_onload'] = nstSvgAsset_onload;
 
     let src = pay.src;
     let idd = pay.id;
+    let drapToPlace = false;
+    if( pay.props.left == null ){
+        pay.props.left = 0;
+        drapToPlace = true;
+    }
+    let propsStyle = '';
+    for(let p of Object.keys( pay.props ) )
+        propsStyle+= p+':'+pay.props[p]+';';
     
     if( pay.assetSrc == 'http'&& src.startsWith('./') && src.endsWith('.svg') ){
         // pointer-events:none;
-        let tr = `<img style="opacity:0;position:fixed;right:50;top:0;" 
+        let tr = `<img style="${propsStyle}" 
                 id="${idd}"
                 src="${pay.homeUrl}${src}"
-                onload="nstSvgAsset_onload('${idd}', this, true);">`;
+                onload="nstSvgAsset_onload('${idd}', this, ${drapToPlace});">`;
         $('body').append( tr );
 
     }

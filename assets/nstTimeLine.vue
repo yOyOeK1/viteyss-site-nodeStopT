@@ -785,7 +785,11 @@ export default{
         },
 
         
-        onAssetsImport( pay ){            
+        onAssetsImport( pay ){          
+            //debugger  
+            console.log('on Assets import\n ------------------------\n',
+                'pay got :\n',pay,'\n---------------------------'
+            );
             pay['homeUrl'] = this.homeUrl;
             let res = nstImportAsset( pay );
 
