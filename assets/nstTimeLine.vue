@@ -677,10 +677,12 @@ export default{
             let fj = JSON.parse( f );
             this.metadata = fj.metadata;
 
-            for( let pay of this.metadata.assets ){                
-                pay['homeUrl'] = this.homeUrl;
-                let res = nstImportAsset( pay );
-                
+            if( 'assets' in this.metadata ){
+               for( let pay of this.metadata.assets ){                
+                    pay['homeUrl'] = this.homeUrl;
+                    let res = nstImportAsset( pay );
+                    
+                }
             }
             
 
@@ -949,28 +951,30 @@ export default{
         getPropertiesDom_local_html( layer, byId, callBackOnChange = undefined ){
             let fd = {};            
             let node = document.getElementById( byId );
-            if( node == undefined ) return undefined;
+            if( node == undefined ){
+                console.error('EE no element by id found :',byId);
+                return undefined;
+            } 
             let compCs = window.getComputedStyle( node );
             compCs.forEach( pName => {
-
                 fd[ pName ] = node.getAttribute( pName );
-                if( fd[ pName ] == null )
+                if( fd[ pName ] == null || fd[ pName ] == 'none' )
                     fd[ pName ] = compCs.getPropertyValue( pName );
             });
 
             // observator of changes 
-            
             if( callBackOnChange != undefined ){
                 if( this.observeAtId != byId && this.observeAtId != null ){
                     toRaw( this.observe ).disconnect();
                     console.log(`observer KILL/DISCONNECT for [${layer.domType}@${layer.domSrcOver}]#[${byId}] of node ......`);
                 }
-
+                
                 this.observeAtId = String( byId );
                 let observer = new MutationObserver((mutationsList) => {
                     for (const mutation of mutationsList) 
-                        if (mutation.type === 'attributes' && mutation.attributeName === 'style') 
-                            callBackOnChange( mutation, byId );                            
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                        callBackOnChange( mutation, byId );                            
+                    }
                 });
 
                 observer.observe( node, { attributes: true });
@@ -990,7 +994,7 @@ export default{
                 return this.getPropertiesDom_local_html( layer, byId, callBackOnChange );             
 
             }else {
-                //TODO
+                TODO
                 // different then local html dome source of properties ws ?
             }
 
@@ -1048,7 +1052,6 @@ export default{
                 clearTimeout( this.propertiesUpdateDelay );
             }
             this.propertiesUpdateDelay = setTimeout(()=> {
-
                 this.propertiesSelectedNow = this.getPropertiesOfNode_ById( byId );
             },100);3
 

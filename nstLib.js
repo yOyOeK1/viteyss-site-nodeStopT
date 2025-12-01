@@ -3,6 +3,9 @@ import {animate as ajsanimate } from 'animejs';
 import { createTimeline as ajscreateTimeline } from 'animejs/timeline';
 
 
+let nstMediaExtensions = [ '.jpg', '.png', '.gif', '.svg' ];
+
+
 class nstLib{
     constructor( ){
         this.metadata = {
@@ -149,18 +152,27 @@ class nstLib{
 }
 
 
-function nstSvgAsset_onload( idd, objThis, positionByDrag = true ){
-    console.log('nstSvgAsset_onload ok idd ',idd);
-    let idde = document.getElementById( idd );
-    SVGInject( objThis, { 'useCache': false, 'makeIdsUnique':false, 'copyAttributes':true,
-        'onAllFinish':()=>{
-            $('#'+idd).css(
-                'left',  
-                parseInt($('#'+idd).css('left').replaceAll('px',''))+1
-            );
-            aajs.animate('#'+idd,{opacity:1,duration:100});     
 
-    }});
+
+function nstAsset_onload( atype, idd, objThis, positionByDrag = true ){
+    console.log('nstAsset_onload ok idd  type:['+atype+'] idd:',idd);
+    let idde = document.getElementById( idd );
+
+    if( atype == '.svg' )
+        SVGInject( objThis, { 'useCache': false, 'makeIdsUnique':false, 'copyAttributes':true,
+            'onAllFinish':()=>{
+                $('#'+idd).css(
+                    'left',  
+                    parseInt($('#'+idd).css('left').replaceAll('px',''))+1
+                );
+                aajs.animate('#'+idd,{opacity:1,duration:100});
+
+        }});
+    else if( nstMediaExtensions.indexOf( atype ) != -1 ){
+        aajs.animate('#'+idd,{opacity:1,duration:100});
+
+    }
+
 
     if( positionByDrag == true )
         setTimeout(()=>{
@@ -194,7 +206,7 @@ function nstSvgAsset_onDragEnd( idd, e2 ){
 
 async function nstImportAsset( pay ){
     console.log('onAI pay:\n', pay);
-    window['nstSvgAsset_onload'] = nstSvgAsset_onload;
+    window['nstAsset_onload'] = nstAsset_onload;
 
     let src = '';
     if( pay.src.startsWith('data:image/') )
@@ -203,8 +215,8 @@ async function nstImportAsset( pay ){
         src = pay.homeUrl+pay.src;
     let idd = pay.id;
     let drapToPlace = false;
-    let doSvgInject = true;
-    
+    //let doSvgInject = true;
+    //debugger
     
     // first load of asset Not resum / load
     if( !pay.src.startsWith('data:image/') && pay.assetSrc == 'http' && pay.addToAssets == 'bakeIn' && pay.props.left == null ){
@@ -223,6 +235,16 @@ async function nstImportAsset( pay ){
     }
     // first load of asset Not resum / load END
 
+    // first load of asset Not resum / load local START
+    if( pay.src == '' && pay.assetSrc == 'localFile' && pay.props.left == null ){
+        src = pay.fileData.b64;
+        pay.src = pay.fileData.b64;
+        delete pay.fileData.b64;
+        //doSvgInject = false;
+        
+    }
+    // first load of asset Not resum / load local END
+
 
     if( pay.props.left == null ){
         pay.props.left = 0;
@@ -234,15 +256,28 @@ async function nstImportAsset( pay ){
     
     if( 
         ( pay.assetSrc == 'http' && src.startsWith('./') && src.endsWith('.svg'))
-        || 
-        doSvgInject == true
+        //|| 
+        //doSvgInject == true
         
     ){
         // pointer-events:none;
         let tr = `<img style="${propsStyle}" 
         id="${idd}"
         src="${src}"
-        onload="nstSvgAsset_onload('${idd}', this, ${drapToPlace});">`;
+        onload="nstAsset_onload('.svg','${idd}', this, ${drapToPlace});">`;
+        $('body').append( tr );
+
+    }
+
+    else if( 
+        ( pay.assetSrc == 'localFile' && nstMediaExtensions.indexOf( pay.fileData.ext ) != -1 )        
+    ){
+        // pointer-events:none;
+        let tr = `<img style="${propsStyle}" 
+        id="${idd}"
+        src="${src}"
+        alt="pay.fileData.name not loaded :("
+        onload="nstAsset_onload('${pay.fileData.ext}','${idd}', this, ${drapToPlace});">`;
         $('body').append( tr );
 
     }

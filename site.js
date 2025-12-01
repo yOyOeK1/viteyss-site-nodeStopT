@@ -182,6 +182,9 @@ q - to Cancel
       
     }else if( keyCode.key == 'r' ){
       let oTargetId = this.appTL._instance.ctx.$data.divFindName;
+      let propSel = this.appTL._instance.ctx.$data.propertiesSelected;
+      console.log('propSel now ',propSel);
+      if( propSel.indexOf( 'transform') == -1 ) propSel.push('transform');
       
       if( oTargetId == '' ) return 1;
       let oTarget = $('#'+oTargetId);
@@ -234,6 +237,12 @@ q - to Cancel
       };
       oTarget.attr('orgPos', orgPos );
       
+      let propSel = this.appTL._instance.ctx.$data.propertiesSelected;
+      console.log('propSel now ',propSel);
+      if( propSel.indexOf( 'left') == -1 ) propSel.push('left');
+      if( propSel.indexOf( 'top') == -1 ) propSel.push('top');
+      
+
       let pStart = null;
       setOpts.Dragging_start(oTarget,e=>{
           //console.log('dragg',e);
