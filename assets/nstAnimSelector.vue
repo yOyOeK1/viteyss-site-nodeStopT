@@ -100,12 +100,12 @@
                 {{ wantState.autoplay }} |
             </span>
         </div>
-        <div v-if="wantState.onBegin != ''" 
+        <div v-if="wantState.onBegin != ''  && wantState.onBegin != undefined" 
             :title="'onBegine: ['+wantState.onBegin+']'"  class="nstAniViewCell">
             onBegin f(<i class="fa-solid fa-rocket"></i>):
             
         </div>
-        <div v-if="wantState.onComplete != ''" 
+        <div v-if="wantState.onComplete != '' && wantState.onComplete != undefined" 
             :title="'onComplete: ['+wantState.onComplete+']'"  class="nstAniViewCell">
             onComplete f(<i class="fa-solid fa-rocket"></i>):
             

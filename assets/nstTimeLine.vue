@@ -19,22 +19,36 @@
 
    
 
-    
+    <div
+        class="nstTimeLine">
+        <!--
+            Time:<br></br>
+        -->
+        <input
+            style="min-width: 95%;"
+            ref="nstTimeSlideInput"
+            type="range"
+            min="0"
+            :max="framesTotal-1"
+            step="1"
+            v-model="frameNo"></input>
+    </div>
         
     <div
         class="nstTimeLine">
         <!--
             Tools:<br></br>
         -->
+        
 
         <div class="nstBox1">
             <div class="nstControlsBar">
-                <button @click="frameNo = 0; nstTimeSlideInput_focus();">|<</button>
-                <button @click="frameNo--;nstTimeSlideInput_focus();"><</button>
+                <button @click="frameNo = 0; nstTimeSlideInput_focus();" title="|< to start"><i class="fa-solid fa-backward-step"></i></button>
+                <button @click="frameNo--;nstTimeSlideInput_focus();"title="< one left"><i class="fa-solid fa-backward"></i></button>
                 <button v-if="isPlaying"
-                    @click="onStop();nstTimeSlideInput_focus();">stop</button>
+                    @click="onStop();nstTimeSlideInput_focus();" title="Stop"><i class="fa-solid fa-pause"></i></button>
                 <button v-else
-                    @click="onPlay();nstTimeSlideInput_focus();">play</button>
+                    @click="onPlay();nstTimeSlideInput_focus();" title="Play"><i class="fa-solid fa-play"></i></button>
                 <input type="checkbox" v-model="playInLoop"
                     title="Play in loop"></input>
                 <select v-model="replayTimeScale">
@@ -43,17 +57,17 @@
                 </select>
 
 
-                <button @click="frameNo++;nstTimeSlideInput_focus();">></button>
-                <button @click="frameNo = framesTotal;nstTimeSlideInput_focus();">>|</button>
+                <button @click="frameNo++;nstTimeSlideInput_focus();"title="> one right"><i class="fa-solid fa-forward"></i></button>
+                <button @click="frameNo = framesTotal;nstTimeSlideInput_focus();" title=">| to end"><i class="fa-solid fa-forward-step"></i></button>
             </div>
 
             <div class="nstDebugBar">
-                <button @click="onSaveToLocal()">save</button> | 
-                <button @click="onLoadToLocal()">load</button>
+                <button @click="onLoadToLocal()" title="Load node stop time file or json"><i class="fa-solid fa-upload"></i></button>
+                <button @click="onSaveToLocal()" title="Save node stop time file"><i class="fa-solid fa-floppy-disk"></i></button>
             </div>
 
 
-            <div class="nstDebugBar">
+            <div v-if="false" class="nstDebugBar">
                 <button @click="onLoad_Start()">fL</button> |
                 <button @click="divFindName='dB'; onDivFindName([]);onAddKeyFrame()">q?</button>
             </div>
@@ -173,21 +187,7 @@
     </div>
 
 
-    <div
-        class="nstTimeLine">
-        <!--
-            Time:<br></br>
-        -->
-
-        <input
-            style="min-width: 95%;"
-            ref="nstTimeSlideInput"
-            type="range"
-            min="0"
-            :max="framesTotal-1"
-            step="1"
-            v-model="frameNo"></input>
-    </div>
+    
 
     <!--
     <div
@@ -198,7 +198,7 @@
         class="nstTimeLine"
         style="
             box-shadow: rgb(50,50,50) 0px 5px 10px inset;
-            overflow-x: auto;
+            overflow-y: auto;
             max-height: 60vh;
         "
         >Layers:<br></br>
@@ -680,27 +680,25 @@ export default{
             if( 'assets' in this.metadata ){
                for( let pay of this.metadata.assets ){                
                     pay['homeUrl'] = this.homeUrl;
-                    let res = nstImportAsset( pay );
-                    
+                    let res = nstImportAsset( pay );                    
                 }
             }
             
+            setTimeout(()=>{            
+                let TlRes = this.nstLibO.getTimeline_FromJsonData( fj );
+                this.layers = fj.layers;
 
-            let TlRes = this.nstLibO.getTimeline_FromJsonData( fj );
-            //debugger
-            this.layers = fj.layers;
+                this.metadata.timeLine = TlRes.timeLine;
+                //this.lSelected = -1;
+                //this.frameNo = 0;
+                console.log(' on load to lacal.....',TlRes);
+                
+                $.toast(`Loaded<br>
+                    fps: ${fj.metadata.fps}<br>
+                    frames: ${fj.metadata.framesTotal}`);
 
-            this.metadata.timeLine = TlRes.timeLine;
-            //this.lSelected = -1;
-            //this.frameNo = 0;
-            console.log(' on load to lacal.....',TlRes);
-
-
+            },300);
             
-            $.toast(`Loaded<br>
-                fps: ${fj.metadata.fps}<br>
-                frames: ${fj.metadata.framesTotal}`);
-
             return 1;
             
         },
@@ -835,7 +833,7 @@ export default{
                 if( this.elSelected != null ){
                     let id = this.elSelected.getAttribute('id');
                     this.divFindName = id;
-                    this.onDivFindName(['x']);
+                    this.onDivFindName([]);
                     deactivateSelector();
                 }
             };
@@ -1235,7 +1233,9 @@ export default{
     font-size: 70%;
     background-color: rgb(247, 245, 207);
     text-shadow: none;
-    min-height: 30px;
+    min-height: 33px;
+    max-height: 33px;
+    overflow-y: auto;
 }
 
 

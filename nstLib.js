@@ -3,7 +3,7 @@ import {animate as ajsanimate } from 'animejs';
 import { createTimeline as ajscreateTimeline } from 'animejs/timeline';
 
 
-let nstMediaExtensions = [ '.jpg', '.png', '.gif', '.svg' ];
+let nstMediaExtensions = [ '.jpg', '.png', '.gif', '.svg', '.html' ];
 
 
 class nstLib{
@@ -204,19 +204,41 @@ function nstSvgAsset_onDragEnd( idd, e2 ){
 
 }
 
+
+async function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      // FileReader.result will contain the data URL (e.g., data:image/png;base64,...)
+      // We extract the Base64 part after the comma.
+      resolve(reader.result.split(',')[1]); 
+    };
+
+    reader.onerror = (error) => {
+      reject(error);
+    };
+
+    reader.readAsDataURL(blob); // This initiates the asynchronous read operation
+  });
+}
+
+
 async function nstImportAsset( pay ){
     console.log('onAI pay:\n', pay);
     window['nstAsset_onload'] = nstAsset_onload;
 
     let src = '';
+    let getExtLost = '';
     if( pay.src.startsWith('data:image/') )
+        src = pay.src;
+    else if( pay.src.startsWith('http') )
         src = pay.src;
     else
         src = pay.homeUrl+pay.src;
     let idd = pay.id;
     let drapToPlace = false;
     //let doSvgInject = true;
-    //debugger
     
     // first load of asset Not resum / load
     if( !pay.src.startsWith('data:image/') && pay.assetSrc == 'http' && pay.addToAssets == 'bakeIn' && pay.props.left == null ){
@@ -225,11 +247,15 @@ async function nstImportAsset( pay ){
             console.error('EE when fetch assets \n',assData.status);
             return -1;  
         } else{
-            let rStr = await assData.text();
-            let asb64 = btoa( rStr );
+            let rBlob = await assData.blob();
+            let asb64 = await blobToBase64( rBlob );
             //console.log('got asset\n',rStr);
-            src = 'data:image/svg+xml;base64,'+asb64;
+            getExtLost = src.substring( src.lastIndexOf('.') );
+            src = `data:${rBlob.type};base64,`+asb64;
+            pay['orgSrc'] = pay.src;
+            pay['ext'] = getExtLost;
             pay.src = src;
+
             
         }
     }
@@ -253,9 +279,17 @@ async function nstImportAsset( pay ){
     let propsStyle = '';
     for(let p of Object.keys( pay.props ) )
         propsStyle+= p+':'+pay.props[p]+';';
+
+    let srcExt = '';
+    if( pay.assetSrc == 'http' && pay.addToAssets == 'linked' ){
+        srcExt = pay.src.substring( pay.src.lastIndexOf('.') );        
+    }else  if( pay.assetSrc == 'http' && pay.addToAssets == 'bakeIn' ){
+        srcExt = pay['ext'];       
+    }
+   
     
     if( 
-        ( pay.assetSrc == 'http' && src.startsWith('./') && src.endsWith('.svg'))
+        ( pay.assetSrc == 'http' && nstMediaExtensions.indexOf( srcExt ) != -1 )
         //|| 
         //doSvgInject == true
         
@@ -264,13 +298,29 @@ async function nstImportAsset( pay ){
         let tr = `<img style="${propsStyle}" 
         id="${idd}"
         src="${src}"
-        onload="nstAsset_onload('.svg','${idd}', this, ${drapToPlace});">`;
+        onload="nstAsset_onload('${srcExt}','${idd}', this, ${drapToPlace});">`;
         $('body').append( tr );
 
     }
 
     else if( 
-        ( pay.assetSrc == 'localFile' && nstMediaExtensions.indexOf( pay.fileData.ext ) != -1 )        
+        ( pay.assetSrc == 'localFile' && pay.fileData.ext == '.html' )        
+    ){
+        // pointer-events:none;
+        let tr = `<div style="${propsStyle}padding:5px;" 
+            id="${idd}" >`+
+            atob(src.split('ta:text/html;base64,')[1]).replaceAll('##this.homeUrl##', pay.homeUrl)+
+            `</div>`;
+        $('body').append( tr );
+        setTimeout(()=> {
+            nstAsset_onload(pay.fileData.ext, idd, undefined, drapToPlace);
+            },100 );
+
+    }
+
+
+    else if( 
+        ( [ 'localFile', 'http' ].indexOf( pay.assetSrc ) != -1 && nstMediaExtensions.indexOf( pay.fileData.ext ) != -1 )        
     ){
         // pointer-events:none;
         let tr = `<img style="${propsStyle}" 
@@ -315,9 +365,15 @@ var nstConvert = {
         let angleRadians = Math.atan2(dy, dx);
         let angleDegrees = angleRadians * (180 / Math.PI);
         return parseInt( angleDegrees ) ;
+    },
+
+    'strToSafeIdName': ( strTo ) => {
+        let tr = strTo.replace(/[!\"#$%&'\(\)\*\+,\.\/:;<=>\?\@\[\\\]\^`\{\|\}~-]/g, '');
+        if( tr.length > 20 ) tr = tr.substring(0,20)+(Date.now()%10000);
+        return tr;
     }
 
 
 };
 
-export { nstLib, nstImportAsset, nstConvert }
+export { nstLib, nstImportAsset, nstConvert, nstMediaExtensions }
