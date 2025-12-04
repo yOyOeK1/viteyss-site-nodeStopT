@@ -186,13 +186,14 @@
 
     </div>
 
-
-    
-
     <!--
     <div
         class="nstTimeLine">Slider:</div>
     -->
+    <NstTView 
+        @onNodeSelected="onNodeSelectedByTree"
+        />
+
 
     <div
         class="nstTimeLine"
@@ -347,6 +348,7 @@ import NstAnimSelector from './nstAnimSelector.vue';
 import { nstImportAsset, nstLib } from '../nstLib';
 import {animate as ajsanimate } from 'animejs';
 import NstAssetsImport from './nstAssetsImport.vue';
+import NstTView from './nstTView.vue';
 //import NstiFs from './nstiFs.vue';
 //import nstProperty from './nstProperty.vue';
 
@@ -362,6 +364,7 @@ export default{
         "NstValueManipulator": NstValueManipulator,
         "NstAnimSelector": NstAnimSelector,
         "NstAssetsImport": NstAssetsImport,
+        "NstTView": NstTView,
         //"NstiFileSystem": NstiFs,
     },
     mounted(){
@@ -901,7 +904,10 @@ export default{
 
 
         
-
+        onNodeSelectedByTree( data ){
+            this.divFindName=data.selectById; 
+            this.onDivFindName([]);
+        },
 
         makeSelectedNode_ByDivObj( divObj, properties = [] ){    
             let layer = this.layer_getByDivName( divObj.selector );//layer_get_layerByDivName( this.layers, divObj.selector, this.frameNo );
