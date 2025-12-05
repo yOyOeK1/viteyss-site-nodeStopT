@@ -69,7 +69,10 @@
             v-model="fromHttp" />
 
         <div>
-            <button @click="onImport('http')">Import</button>
+            <button @click="onImport('http')" class="nstButton">
+                <i class="fa-solid fa-cloud-arrow-down"></i>
+                Import
+            </button>
         </div>
 
     </div>
@@ -78,7 +81,7 @@
 
     <div class="nstAICloud">
         <li>Local file system ....</li>
-
+        <div><small>Local assets will be baked in.</small></div>
         <div>
             <WWorkerLF 
             :homeUrl="setHomeUrl"

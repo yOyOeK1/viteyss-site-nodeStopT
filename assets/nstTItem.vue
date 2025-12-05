@@ -1,41 +1,72 @@
 <template>
     <div 
-        :style="'margin-left:'+(level==1?0:9)+'px;padding-left:5px;'+
+        :style="'margin-left:'+(level==0?0:9)+'px;padding-left:5px;'+
             'padding-top:2px;padding-bottom:2px;'+
-           'border-left: solid gray 1px;border-bottom: solid gray 1px;border-radius:6px;'+
-           'background-color:rgb('+((iNo%2)==0?'255,255,255':'249,240,230')+');'
+           'border-left: solid gray 1px;'+
+           //`border-bottom: solid gray 1px;`+
+           `border-radius:6px;`+
+           'background-color:rgb('+((iNo%2)==0?'255,255,255':'249,230,250')+');'
 
         "
+        
         v-if="['META','TITLE','LINK','SCRIPT'].indexOf(name)==-1"
-        :title="'Path index tree: '+pathNow+iNo+'\nLevel: '+level+'\nChildren index: '+iNo"
+        :title="'Path index tree: '+pathNow+iNo+'\n'+
+            'Path computed: '+myDoomIndexPath+'\n'+
+            'Level: '+level+'\nChildren index: '+iNo"
         >
         <span @click="isOpen=!isOpen"
-            style="display: inline;margin: 0px;padding: 0px;" 
+            style="display: inline;margin: 1px;padding: 0px;" 
             :disabled="children.length==0">
-            <span v-if="children.length == 0">
-                <i class="fa-regular fa-square-full"></i>
+            <span v-if="children.length == 0" style="color:gray;">|_
+                <!--
+                    <i class="fa-regular fa-square-full"></i>
+                -->
             </span>
             <span v-else>
                 <i v-if="!isOpen" class="fa-regular fa-square-plus"></i>
                 <i v-else class="fa-regular fa-square-minus"></i>
             </span>
         </span>
-        <u>{{ name }}</u> {{ aId }} 
+
+
+        <span :class="
+            (isSelectedLast?'nstTVitemSelectedLast':
+                (isSelectedComputed()?'nstTVitemSelected':'')
+            )
+
+            ">
+            <
+            <div
+                style="display: inline; font-size: 75%; opacity: 0.7;"
+                >
+                {{ name.toLowerCase() }}
+            </div> 
+            &nbsp;
+            <div v-if="aId!=''" style="display: inline; cursor: pointer;"
+                @click="doItemSelected()"
+                >
+                {{ aId }}
+            </div>
+            <div v-else style="display: inline;">
+                {{ aId }}
+            </div>
             <!--<small>
                 (ch: {{ children.length }})
             </small>-->
-            <i v-if="aId!=''" 
-                @click="doItemSelected()"
-                :title="'Select this #'+aId" class="fa-solid fa-bullseye"></i>
+            
+            />
 
+        </span>
 
         <div v-if="isOpen">
-            <div v-if="level < 10">
+            <div v-if="level < 10"
+                >
                 <div v-for="valuee,i in children">                    
                     <NstTItem                         
                         :level="level+1"
                         :iNo="i"
                         :pathNow="pathNow+iNo+','"
+                        :pathsSelected="pathsSelected"
                         :name="valuee.tagName"
                         :mObj="valuee"
                         @nst-tree-item-selected="nstTreeItemSelected_emit"
@@ -53,10 +84,11 @@
 
 </template>
 <script>
-import { ref } from 'vue';
+import { ref,toRaw } from 'vue';
+import { nstConvert } from '../nstLib';
 export default{
     emits:[ 'nst-tree-item-selected' ],
-    props:[ 'level', 'iNo', 'pathNow', 'name', 'mObj' ],
+    props:[ 'level', 'iNo', 'pathNow', 'pathsSelected', 'name', 'mObj' ],
     data(){
 
         let children = [];
@@ -78,19 +110,82 @@ export default{
             if( this.level < 2 ) 
                 this.isOpen = true;
         }
-
-
+        let myDom = this.myIndexPath();
+        let isSel = toRaw(this.isSelectedComputed());
 
         return {
-            isOpen: isOpen,
+            isOpen: isSel?isSel:isOpen,
             children: children,
             aId:aId,
+            myDoomIndexPath: myDom
         };
     },
     mounted(){
-        console.log(' pathNow:', this.pathNow);       
+        //console.log(' pathNow:', this.pathNow);       
+    },
+    computed:{
+        isSelectedLast(){
+            //console.log('myPath',this.myDoomIndexPath);
+            let mPath = this.myDoomIndexPath;//this.myIndexPath();
+            
+            if( this.pathsSelected.length > 0 ){
+                for( let i=0,ic=this.pathsSelected.length-1; i<=ic; i++ ){
+                    if( this.pathsSelected[i].length-1 == this.level )
+                        return JSON.stringify( mPath ) == JSON.stringify( this.pathsSelected[i].slice(0,this.level+1) );
+                }
+    
+            }
+            return false;
+        }
     },
     methods:{
+        isSelectedComputed(){
+            //console.log('myPath2',this.myDoomIndexPath);
+            let mPath = this.myDoomIndexPath?this.myDoomIndexPath:this.myIndexPath();
+            if( this.pathsSelected.length > 0 ){
+                for( let i=0,ic=this.pathsSelected.length; i<ic; i++ ){
+                    if( this.pathsSelected[i].length >= this.level && 
+                        this.pathsSelected[i][this.level] == this.iNo 
+                    ){
+                    
+                        let selPath = this.pathsSelected[i].slice(0,this.level+1);
+                        if( JSON.stringify(mPath) == JSON.stringify(selPath) ){
+                            return true;
+                        }
+                        
+                    }
+                }
+    
+            }
+            return false;
+        },
+        myIndexPath(){
+            let o = toRaw( this.mObj );
+            //;this.getIndexOfChildReq( o, o.parentNode.children, [] );
+            let tr = nstConvert.getIndexOfChildReq( o );
+            return tr;
+        },
+        /*
+        getIndexOfChildReq( oLookFor, lookIn, tr ){
+            //console.log('get index ',tr,' tagName now :',oLookFor.tagName, ' look in: ',lookIn.length);
+            if( oLookFor.tagName == 'BODY' ){
+                return tr;
+            }
+
+            let ind = -1;
+            for( let i=0,ic=lookIn.length; i<ic; i++){
+                if( lookIn[i] == oLookFor ){
+                    ind = i;
+                    break;
+                }
+            }
+            if( ind != -1 ){
+                tr.unshift( ind );
+                return this.getIndexOfChildReq( oLookFor.parentNode, oLookFor.parentNode.parentNode.children, tr );
+            }
+        },
+        */
+
         doItemSelected(  ){
             //console.log( ' do item selected from tree ',this.mObj);
             if( this.aId != '' ){

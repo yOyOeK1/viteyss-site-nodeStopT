@@ -1,17 +1,42 @@
+
+<style>
+.nstTVitemSelected{
+    /*outline: 2px solid rgb(84, 132, 88);
+    */background-color: rgb(228, 239, 188);
+    border-radius: 6px;
+    padding:2px;
+}
+.nstTVitemSelectedLast{
+    /*outline: 2px solid rgb(6, 85, 1);
+    */color: rgb(255, 255, 255);
+    background-color: rgb(11, 66, 1);
+    border-radius: 6px;
+    padding:2px;
+}
+</style>
 <template>
     <div id="nstItemTreeRoot">
-        Tree View: <button @click="onRebuild()"><i class="fa-solid fa-retweet"></i></button>
+        <button 
+            title="Rebuild tree"
+            @click="onRebuild()" class="nstButton"><i class="fa-solid fa-retweet"></i></button>
+
         <small>
             o: {{ isOpen }} lever: {{ level }} name: {{ name }} ch: {{ children.length }}
         </small>
 
-
+        <!--
+            <div>
+                <div>Paths now selected:</div>
+                ( {{ pathsSelected }} )
+            </div>
+            -->
 
          <NstTItem 
             v-for="value,i in children"
-            :level="level+1"
+            :level="level"
             :iNo="i"
             :pathNow="'body,'"
+            :pathsSelected="pathsSelected"
             :name="value.tagName"
             :mObj="value"
             @nst-tree-item-selected="onSelectedItem"
@@ -31,7 +56,7 @@ export default{
     components: {
         "NstTItem" : NstTItem
     },
-    props:[  ],
+    props:[ 'pathsSelected' ],
     data(){
         return {
             name: 'body',
@@ -41,6 +66,9 @@ export default{
             children: ref([])
         };
     },
+    mounted(){
+        setTimeout(()=>this.onRebuild(),200);
+    },  
     methods:{
         onRebuild(){
             this.children = [];

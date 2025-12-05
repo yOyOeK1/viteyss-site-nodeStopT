@@ -9,6 +9,18 @@
         
         <div class="debBorders" >
             Selected: ({{ selected.length }})
+
+            <img :src="homeUrl+'assets/icon_left_top.svg'" 
+                title="Add property: left, top"
+                @click="$emit('nst-prop-selection-change', {pName: 'left', wantState: true } );$emit('nst-prop-selection-change', {pName: 'top', wantState: true } );"/>
+            <i class="fa-regular fa-eye-slash"
+                title="Add property: display"
+                @click="$emit('nst-prop-selection-change', {pName: 'display', wantState: true } );"></i>
+            <img :src="homeUrl+'assets/icon_opacity.svg'" 
+                title="Add property: opacity"
+                @click="$emit('nst-prop-selection-change', {pName: 'opacity', wantState: true } );"/>
+
+
             
             <div  class="nstPropSelPropList">
                 <div v-for="sProp,sIn in selected"
@@ -67,8 +79,8 @@ import { toRaw,ref } from 'vue';
 import NstValueManipulator from './nstValueManipulator.vue';
 
 export default{
-    emits: ['nst-prop-selection-change', 'nst-value-manipulator'],
-    props:[ 'properties', 'selected', 'layerSelected', 'divSelectedName' ],
+    emits: ['nst-prop-selection-change', 'nst-value-manipulator' ],
+    props:[ 'properties', 'selected', 'layerSelected', 'divSelectedName', 'homeUrl' ],
     components:{ 
         "NstValueManipulator": NstValueManipulator
     },    
@@ -105,7 +117,8 @@ export default{
         }      
     },
     methods:{
-       nstSetPropertyNewValue( opts ){
+       
+        nstSetPropertyNewValue( opts ){
             this.$emit('nst-value-manipulator',opts);
         }
 

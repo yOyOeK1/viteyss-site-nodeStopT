@@ -175,7 +175,7 @@ export default{
         if( !('alternate' in nSelected )  ) nSelected['alternate'] = false;
         if( !('autoplay' in nSelected )  ) nSelected['autoplay'] = false;
         if( !('onBegin' in nSelected ) ) nSelected['onBegin'] = '';
-        if( !('onComplete' in nSelected ) ) nSelected['onCoplete'] = '';
+        if( !('onComplete' in nSelected ) ) nSelected['onComplete'] = '';
 
         this.wantState = nSelected;
 

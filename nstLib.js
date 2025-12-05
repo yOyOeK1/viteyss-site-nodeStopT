@@ -371,8 +371,31 @@ var nstConvert = {
         let tr = strTo.replace(/[!\"#$%&'\(\)\*\+,\.\/:;<=>\?\@\[\\\]\^`\{\|\}~-]/g, '');
         if( tr.length > 20 ) tr = tr.substring(0,20)+(Date.now()%10000);
         return tr;
-    }
+    },
 
+    'getIndexOfChildReq': ( oLookFor, tr=[] )=>{
+        //console.log('get index ',tr,' tagName now :',oLookFor);
+        if( oLookFor.tagName == 'BODY' ){
+            return tr;
+        }
+        let lookIn = oLookFor.parentNode.children;
+        let ind = -1;
+        
+        for( let i=0,ic=lookIn.length; i<ic; i++){
+            if( lookIn[i] == oLookFor ){
+                ind = i;
+                break;
+            }
+        }
+        if( ind != -1 ){
+            tr.unshift( ind );
+            return nstConvert.getIndexOfChildReq( oLookFor.parentNode, tr );
+        }
+
+
+
+
+    },
 
 };
 

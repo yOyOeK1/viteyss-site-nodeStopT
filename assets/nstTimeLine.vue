@@ -79,18 +79,19 @@
 
                 <button
                     title="Import assets to canvas"
+                    id="nstBtImportAssetsOpenShow"
                     @click="onImportAssetsToCanvas()"
                     ><i class="fa-solid fa-file-import"></i></button>
 
                 <div 
                     v-if="showImportAssets"
                     style="
-                        border:solid peru 4px;
+                        border:solid #c93ecb 4px;
                         border-radius: 6px;
-                        background-color: #ccccfc;
+                        background-color: #e1cbaf;
                         position: fixed;
                         margin-top:10px;
-                        z-index:1;
+                        z-index:2;
                         padding:5px;
                         max-width:300px;
                         box-shadow: rgb(50, 50, 50) 5px 8px 15px;
@@ -112,6 +113,14 @@
                     ><i class="fa-solid fa-bullseye"></i>
                 </button>
 
+                <button
+                    title="Select node from local dome with cursor"
+                    @click="onTlTreeViewToogle()"
+                    id="nstBtTreeOpenShow"
+                    :style=" 'color:'+(elSelectedIsActive?'red':'white')+';' "
+                    ><i class="fa-solid fa-diagram-project"></i>
+                </button>
+
 
                 <div 
                     v-if="lSelected != -1 && showProperties"
@@ -119,9 +128,9 @@
                         border:solid darkolivegreen 4px;
                         border-radius: 6px;
                         background-color: gainsboro;
-                        position: fixed;
+                        position: absolute;
                         margin-top:10px;
-                        z-index:1;
+                        z-index:2;
                         padding:5px;
                         max-width:300px;
                         box-shadow: rgb(50, 50, 50) 5px 8px 15px;
@@ -143,6 +152,7 @@
                         :divSelectedName="divSelectedName"
                         :properties="propertiesSelectedNow"
                         :selected="propertiesSelected"
+                        :homeUrl="homeUrl"
                         @nst-prop-selection-change="propertiesSelectedChange"
                         @nst-value-manipulator="onEmit_setPropertiesOfNobeById"
                     
@@ -191,7 +201,13 @@
         class="nstTimeLine">Slider:</div>
     -->
     <NstTView 
+        style="
+            box-shadow: rgb(50,50,50) 0px 5px 10px 5px;
+            position:absolute;
+            overflow-y: auto;
+            min-width: 100%"
         @onNodeSelected="onNodeSelectedByTree"
+        :pathsSelected="nstTreePathSelected"
         />
 
 
@@ -200,7 +216,7 @@
         style="
             box-shadow: rgb(50,50,50) 0px 5px 10px inset;
             overflow-y: auto;
-            max-height: 60vh;
+            max-height: 80vh;
         "
         >Layers:<br></br>
 
@@ -261,7 +277,7 @@
                                     <NstPropertyRow :propertyTimeline="f"></NstPropertyRow>
                                 -->
 
-                                <! -- old -->
+                                <!-- old -->
                                 <div style=""
                                     >
                                     <div v-for="(value,index) in f.keys"
@@ -345,10 +361,11 @@ import {
 import NstPropSelector from './nstPropSelector.vue';
 import NstValueManipulator from './nstValueManipulator.vue';
 import NstAnimSelector from './nstAnimSelector.vue';
-import { nstImportAsset, nstLib } from '../nstLib';
+import { nstConvert, nstImportAsset, nstLib } from '../nstLib';
 import {animate as ajsanimate } from 'animejs';
 import NstAssetsImport from './nstAssetsImport.vue';
 import NstTView from './nstTView.vue';
+import MATreeViewNST from '../MediaAssets/treeView_showHide1.json'
 //import NstiFs from './nstiFs.vue';
 //import nstProperty from './nstProperty.vue';
 
@@ -389,8 +406,18 @@ export default{
             },200);
         }
 
+        /*
+        TlTreeViewRes['timeLine'].reset();
+        */
+       //console.log('html is :',$('#htmlDynoHandler'));
+       let TlTreeViewRes = this.nstLibO.getTimeline_FromJsonData( MATreeViewNST );
+       this.TlTreeView = toRaw( TlTreeViewRes['timeLine'] );
+       //console.log('html is 2:',$('#htmlDynoHandler'),TlTreeViewRes);
 
         setTimeout(()=>{
+
+            //console.log('html is 3:',$('#htmlDynoHandler'),TlTreeViewRes);
+            this.TlTreeView.reset();
             console.log('updated ....');
             nstTLMSDiv = $('#nstTLMS');
             },100
@@ -410,9 +437,10 @@ export default{
         let nstTLMS = -1;
         let cellWidth = (window.innerWidth - 100) / (framesTotal - 1) ;
 
+        let nstl = new nstLib();
 
         return {
-            nstLibO: new nstLib(),
+            nstLibO: nstl,
             metadata: {
                 fps: fps,
                 framesTotal: framesTotal,
@@ -479,6 +507,11 @@ export default{
 
             lSelected:-1,
             layers:[],
+
+            nstTreePathSelected:[ 
+                [48,1,1,0,2], [48,1,1,0,3,3,2] 
+            ],
+            TlTreeView: -1,
 
             fileDialogOpen: false,
             fileDialogOperation: '',
@@ -577,17 +610,21 @@ export default{
                     this.propertiesSelected.splice(pIn,1);
                 }
                 
-            }else
-                this.propertiesSelected.push( propState.pName );
+            }else{
+                if( this.propertiesSelected.indexOf( propState.pName ) == -1 )
+                    this.propertiesSelected.push( propState.pName );
+            }
 
 
             
         },  
 
         layer_getByDivName( divName, addToLayers = true ){
-            let lId = this.layers.findIndex( l=>l.divName==divName);
+
+            let layers = this.layers;
+            let lId = layers.findIndex( l=>l.divName==divName);
             //debugger
-            if( lId != -1 ) return this.layers[ lId ];
+            if( lId != -1 ) return layers[ lId ];
             else{
                 let layer = {
                     divName: String(divName),
@@ -602,8 +639,10 @@ export default{
                     propertiesNow: {}
                 };
                 if( addToLayers == true )
-                    this.layers.push( layer );
+                    layers.push( layer );
 
+
+                
                 return layer;
             }
         },
@@ -809,6 +848,27 @@ export default{
 
         },
 
+        onTlTreeViewToogle(){
+            console.log('tree view toogle ',this.TlTreeView._currentTime);
+            if( this.TlTreeView._currentTime == 0 ){
+                this.TlTreeView.play();
+                setTimeout(()=>{
+                    this.TlTreeView.pause();
+                    this.TlTreeView.seek(500);
+
+                },500);
+            }else if( this.TlTreeView._currentTime == 500 ){
+                this.TlTreeView.seek(1400);
+                this.TlTreeView.play();
+                setTimeout(()=>{
+                    this.TlTreeView.reset();
+                    this.TlTreeView.seek(0);
+
+                },500);
+            }else{
+                //this.TlTreeView.reverse();
+            }
+        },
 
         onSelectNodeFromDome(){
             
@@ -881,8 +941,7 @@ export default{
 
         onDivFindName( properties = [] ){
             let lookRes = $(`#${this.divFindName}`);
-            console.log('div find name .... ['+this.divFindName,
-                '] have ('+lookRes.length+')'
+            console.log('div find name .... ['+this.divFindName+'] have ('+lookRes.length+')'
             );
 
             console.log('[',lookRes,']',' typeof ', typeof lookRes);
@@ -909,13 +968,40 @@ export default{
             this.onDivFindName([]);
         },
 
+        clearEmptyLayers(){
+            //console.log('layers clean ',this.layers.length);
+            let layers = this.layers;
+            let mark4Del = [];
+            for(let li=0;true && layers.length > 0;){
+                if( layers[li]['kFrames'].length == 0  ){
+                    //console.log('found empty layer: ',li);
+                    mark4Del.push( li++ );
+                }else{
+                    li++;
+                }
+                if( li >= layers.length ) break;
+            }
+            if( mark4Del.length ){
+                console.log('[i] Clear emty layers:',mark4Del);
+                for( let i of mark4Del.reverse() )
+                   this.layers.splice( i, 1 );
+            }
+            
+            
+        },
+
         makeSelectedNode_ByDivObj( divObj, properties = [] ){    
+            this.clearEmptyLayers();
+            
             let layer = this.layer_getByDivName( divObj.selector );//layer_get_layerByDivName( this.layers, divObj.selector, this.frameNo );
             this.lSelected = -1;
             this.propertiesSelectedNow = this.getPropertiesOfNode_ById( divObj.selector.substring(1), this.onDivObjPropertiesUpdate );
             this.animeSelected = this.getAnimeOfNode_layer( layer );
             this.lSelected = this.layers.findIndex( l=>l.divName == divObj.selector ) ;
-            
+            this.nstTreePathSelected = [ nstConvert.getIndexOfChildReq( 
+                document.getElementById( divObj.selector.substring(1) )
+             ) ];
+
                         
             if( properties != [] )
                 this.propertiesSelected_Set( properties );            
@@ -1255,6 +1341,9 @@ export default{
     display:inline-block;
 }
 .nstControlsBar button{
+    padding: 5px;
+}
+.nstButton{
     padding: 5px;
 }
 .nstFindBar{
