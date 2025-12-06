@@ -372,6 +372,24 @@ var nstConvert = {
         if( tr.length > 20 ) tr = tr.substring(0,20)+(Date.now()%10000);
         return tr;
     },
+    'getElementFromDomeByIndexPath': ( dom, iPath, level = 0 ) => {
+        //debugger
+        //console.log('index path:',iPath, ' level now :',level,' in dom ',dom);
+        if( dom == undefined  ){
+            //console.log('index path: exit 1');
+            return -1;
+        }
+        if( level > 20 || level >= (iPath.length) ){
+            //console.log('index path: exit 2');
+            return dom;
+        } 
+
+        return nstConvert.getElementFromDomeByIndexPath( 
+            dom.children[ iPath[ level ] ], 
+            iPath,
+            level +1  
+        );
+    },
 
     'getIndexOfChildReq': ( oLookFor, tr=[] )=>{
         //console.log('get index ',tr,' tagName now :',oLookFor);

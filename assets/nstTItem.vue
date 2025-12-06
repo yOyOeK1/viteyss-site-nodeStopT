@@ -1,4 +1,6 @@
 <template>
+
+
     <div 
         :style="'margin-left:'+(level==0?0:9)+'px;padding-left:5px;'+
             'padding-top:2px;padding-bottom:2px;'+
@@ -14,6 +16,7 @@
             'Path computed: '+myDoomIndexPath+'\n'+
             'Level: '+level+'\nChildren index: '+iNo"
         >
+
         <span @click="isOpen=!isOpen"
             style="display: inline;margin: 1px;padding: 0px;" 
             :disabled="children.length==0">
@@ -33,34 +36,30 @@
             (isSelectedLast?'nstTVitemSelectedLast':
                 (isSelectedComputed()?'nstTVitemSelected':'')
             )
-
             ">
-            <
-            <div
-                style="display: inline; font-size: 75%; opacity: 0.7;"
-                >
-                {{ name.toLowerCase() }}
-            </div> 
-            &nbsp;
-            <div v-if="aId!=''" style="display: inline; cursor: pointer;"
-                @click="doItemSelected()"
-                >
-                {{ aId }}
-            </div>
-            <div v-else style="display: inline;">
-                {{ aId }}
-            </div>
-            <!--<small>
-                (ch: {{ children.length }})
-            </small>-->
             
-            />
+                <section 
+                    :id="
+                    ('treePath_'+pathNow+iNo+',').replaceAll(',','_')
+                    "
+                    :ref="
+                    ('treePath_'+pathNow+iNo+',').replaceAll(',','_')
+                    " 
+                    style="display:inline;"> 
+                    
+                    <NstTItemNode 
+                        :name="name"
+                        :aId="aId"
+                        @do-item-selected="doItemSelected"
+                        />
+
+                </section>
 
         </span>
 
         <div v-if="isOpen">
-            <div v-if="level < 10"
-                >
+            <div v-if="level < 10" >
+                
                 <div v-for="valuee,i in children">                    
                     <NstTItem                         
                         :level="level+1"
@@ -71,7 +70,8 @@
                         :mObj="valuee"
                         @nst-tree-item-selected="nstTreeItemSelected_emit"
                         />
-                    </div>
+                </div>
+                
             </div>
         </div>
         
@@ -86,7 +86,14 @@
 <script>
 import { ref,toRaw } from 'vue';
 import { nstConvert } from '../nstLib';
+import NstTItemNode from './nstTItemNode.vue';
+
+
+
 export default{
+    components:{
+        'NstTItemNode': NstTItemNode
+    },
     emits:[ 'nst-tree-item-selected' ],
     props:[ 'level', 'iNo', 'pathNow', 'pathsSelected', 'name', 'mObj' ],
     data(){
@@ -186,16 +193,16 @@ export default{
         },
         */
 
-        doItemSelected(  ){
-            //console.log( ' do item selected from tree ',this.mObj);
+        doItemSelected( event  ){
+            //console.log( ' do item selected from tree ',this.mObj, ' event: ',event);
             if( this.aId != '' ){
-                this.nstTreeItemSelected_emit({'selectById':this.aId});
+                this.nstTreeItemSelected_emit({'selectById':this.aId, 'event': event });
             }
         },
         nstTreeItemSelected_emit( data ){
-            console.log(' level: '+this.level+' aId:'+this.aId,
-                ' got data\n',data
-            );
+           // console.log(' level: '+this.level+' aId:'+this.aId,
+            //    ' got data\n',data
+            //);
             this.$emit('nst-tree-item-selected', data);
         }
     }

@@ -1,8 +1,7 @@
-
 <style>
 .nstTVitemSelected{
     /*outline: 2px solid rgb(84, 132, 88);
-    */background-color: rgb(228, 239, 188);
+    */background-color: rgb(186, 199, 139);
     border-radius: 6px;
     padding:2px;
 }
@@ -12,6 +11,20 @@
     background-color: rgb(11, 66, 1);
     border-radius: 6px;
     padding:2px;
+}
+
+
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.v-enter-from{
+    height: 0px;
+}
+.v-leave-to {
+  opacity: 0;
+  
 }
 </style>
 <template>
@@ -23,6 +36,48 @@
         <small>
             o: {{ isOpen }} lever: {{ level }} name: {{ name }} ch: {{ children.length }}
         </small>
+
+        <Transition>
+
+            <div 
+                v-if="pathsSelected.length>0"
+                style="
+                    padding:12px;
+                    margin: 1px 0px;
+                    box-shadow: rgb(50, 50, 50) 0px 3px 8px 0px inset;
+                    background-color: rgb(116 157 70);
+                    border-top: 3px solid #42952d;
+                    border-bottom: 2px solid #bfff79;
+                    display: inline-block;
+                    min-width: 100vw;
+                    ">
+                <div v-for="si in getSelectedListNice"
+                    :title="si.indexPath">
+                    
+                    <span v-if="si.node!=-1"
+                        class="nstTVitemSelectedLast" 
+                        style="box-shadow: rgb(73 59 38) 0px 4px 7px 0px;"
+                        >
+                        
+                        <NstTItemNode 
+                            :name="si.name"
+                            :aId="si.aId"
+                            @do-item-selected="onScrollTo(si.indexPath)"
+                            />
+
+                    </span>
+                    <span v-else>
+                        
+                        <i class="fa-solid fa-notdef"></i> - NaN er
+                    
+                    </span>
+
+
+                </div>
+
+            </div>
+
+        </Transition>
 
         <!--
             <div>
@@ -49,12 +104,18 @@
 
 </template>
 <script>
+
+import { nstConvert } from '../nstLib';
 import NstTItem from './nstTItem.vue';
-import { ref } from 'vue';
+import { ref,toRaw } from 'vue';
+import NstTItemNode from './nstTItemNode.vue';
+import { onScroll } from 'animejs';
+
 export default{
     emits:[ 'onNodeSelected' ],
     components: {
-        "NstTItem" : NstTItem
+        "NstTItem" : NstTItem,
+        "NstTItemNode" : NstTItemNode 
     },
     props:[ 'pathsSelected' ],
     data(){
@@ -69,7 +130,39 @@ export default{
     mounted(){
         setTimeout(()=>this.onRebuild(),200);
     },  
+    computed:{
+        getSelectedListNice(){
+            let tr = [];
+
+            for(let e of this.pathsSelected ){
+                let node = nstConvert.getElementFromDomeByIndexPath( document.body, toRaw(e) );
+                tr.push({
+                    indexPath: e,
+                    id: node!=-1?node.getAttribute('id'):'eRId',//e[ e.length-1 ],
+                    aId: node!=-1?node.getAttribute('id'):'eRId',
+                    name: node!=-1?node.tagName:'Err:Select',
+                    'node':node
+                });
+           }
+
+            return tr;//[ {name:'div', id:'dB'} ];
+        }
+    },
     methods:{
+        onScrollTo( indexPath ){
+            let tPath = ('treePath_body_'+indexPath+',').replaceAll(',','_');
+            //debugger
+            let o = document.getElementById( tPath );
+            let oSiTop = o.offsetTop;
+            let oSiLeft = o.offsetLeft;
+            document.getElementById('nstItemTreeRoot').scrollTo({
+                top: oSiTop-30,
+                left: oSiLeft-30,
+                behavior: "smooth",
+            });
+        },
+
+
         onRebuild(){
             this.children = [];
             this.children = document.body.children;

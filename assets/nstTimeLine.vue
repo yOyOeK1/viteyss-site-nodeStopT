@@ -33,7 +33,7 @@
             step="1"
             v-model="frameNo"></input>
     </div>
-        
+       
     <div
         class="nstTimeLine">
         <!--
@@ -72,6 +72,22 @@
                 <button @click="divFindName='dB'; onDivFindName([]);onAddKeyFrame()">q?</button>
             </div>
 
+
+            <!--
+                <button @click="$refs.nstHistoryO.echo('hi')">o</button>
+            -->
+
+            <div class="nstHistoryBar">
+                <NstHistory 
+                    ref="nstHistoryO"
+                    :layers="layers"
+                    :metadata="metadata"
+                    :lSelected="lSelected"
+                    :divFindName="divFindName"
+                    :nstTreePathSelected="nstTreePathSelected"
+                    @nst-history-swap="onEmit_nstHistorySwap"
+                    />
+            </div>
 
 
             <div
@@ -122,6 +138,27 @@
                 </button>
 
 
+                #:
+                <input title="Look for div node $('#....')"
+                    :placeholder=" elSelectedStr "
+                    type="text" v-model="divFindName"
+                    style="width:125px"
+                    @change="onDivFindName([])"
+                    >
+                
+
+
+
+
+                <button 
+                    :disabled="lSelected==-1"
+                    @click="showProperties = !showProperties"
+                    >
+                    <i :class="'fa-solid fa-caret-'+(showProperties ? 'up' : 'down')"></i>
+                </button>
+
+
+
                 <div 
                     v-if="lSelected != -1 && showProperties"
                     style="
@@ -165,20 +202,7 @@
 
 
 
-                #:
-                <input title="Look for div node $('#....')"
-                    :placeholder=" elSelectedStr "
-                    type="text" v-model="divFindName"
-                    style="width:125px"
-                    @change="onDivFindName([])"
-                    >
-                
-                <button 
-                    :disabled="lSelected==-1"
-                    @click="showProperties = !showProperties"
-                    >
-                    <i :class="'fa-solid fa-caret-'+(showProperties ? 'up' : 'down')"></i>
-                </button>
+
 
                 <button
                     v-if=" lSelected != -1 "
@@ -222,29 +246,63 @@
 
         <div
             v-for="layer in layers"
-             style="
-                    
+             style="                    
                     display: inline-block;
                 "
             >
             
-            <div class="nstLayerTopBar">
+            <div class="nstLayerTopBar"
+            
+                :style="
+                    (layer.divName == divSelectedName?
+                        'background-color:rgb(11, 66, 1);color:white;':
+                        'background-color:rgb(228, 239, 188);color:gray;')
+                    "
+                >
 
                 <input type="checkbox"
                     title="show / hide object / layer" v-model="layer.isVisible"></input>
                 
                 <div 
-                    style="display:inline; border:solid 3px rgb(190, 249, 42); padding-right:50px;"
-                    @click="makeSelectedNode_ByName( layer.divName, 'all' )">
-                
-                    <span v-if="layer.divName != divSelectedName">
+                    style="display:inline;cursor:pointer;padding-right: 60px;"
+                    @click="makeSelectedNode_ByName( layer.divName, 'all' )"
+                    >
+
+                    <NstTItemNode 
+                        :name="getTagNameFrom_layer( layer )"
+                        :aId="layer.divName.substring(1)"
+                        />
+                        <!--
+                        @do-item-selected="doItemSelected()"
+                        -->
+                    <!--
+                    <span v-if="layer.divName != divSelectedName"
+                        style="color:gray;"
+                        >
                         {{ layer.divName }}
                     </span>
-                    <b v-else>
+                    <span v-else
+                        >
                         {{ layer.divName }}
-                    </b>
+                    </span>
+                    -->
+                    
                 </div>
+                <div class="nstTLPropTools">
 
+                    <!--
+                    <i class="fa-regular fa-circle-check"
+                        :title="`Select node: \n\t[${layer.divName}]`"
+                        @click="makeSelectedNode_ByName( layer.divName, [] )"></i> |
+                    <i class="fa-regular fa-copy"
+                        @click="console.log('TODO')"></i> | 
+                    <i class="fa-solid fa-broom"
+                        @click="console.log('TODO')"></i> | 
+                    -->
+                    <i class="fa-regular fa-trash-can"
+                        @click="removeLayer_ByName( layer.divName )"></i>
+
+                </div>
                 
             </div>
                 
@@ -259,18 +317,38 @@
                                 v-if="layer.isVisible"
                                 v-for="f in layer.kFrames"
                                 class="debBorders nstFrameCssBlock"
+                                :style=" 
+                                        (propertiesSelected.indexOf( f.name )!=-1 &&
+                                            layer.divName == divSelectedName )?'color:black;filter:sepia(0);':'color:gray;filter:sepia(0.7);'
+                                    "
                                 >
                                 
                                 <!--/*(layer.divName != divSelectedName?'nstFrameCssBlockSmaller ':'')*/-->
                                 <div 
                                     :class="'debBorders '"
-                                    :style=" 
-                                        (propertiesSelected.indexOf( f.name )!=-1 &&
-                                            layer.divName == divSelectedName )?'font-weight:bold;':'opacity:0.5;'
-                                    "
-                                    @click="makeSelectedNode_ByName( layer.divName, [f.name], $event )"
+                                    
                                     >
-                                    [ {{ f.name }} ]
+                                    <!--
+                                        @click="makeSelectedNode_ByName( layer.divName, [f.name], $event )"
+                                    -->
+                                    {{ f.name }}
+
+                                    <div class="nstTLPropTools">
+
+                                        <i class="fa-regular fa-circle-check"
+                                            :title="`Select node: \n\t[${layer.divName}]\nwith property: \n\t[${f.name}]`"
+                                            @click="makeSelectedNode_ByName( layer.divName, [f.name] )"></i> |
+                                        <!--
+                                        <i class="fa-regular fa-copy"
+                                            @click="console.log('TODO')"></i> | 
+                                        <i class="fa-solid fa-broom"
+                                            @click="console.log('TODO')"></i> | 
+                                        -->
+                                        <i class="fa-regular fa-trash-can"
+                                            @click="removeProperty_ByName( layer.divName, [f.name] )"></i>
+
+                                    </div>
+
                                 </div>
 
                                 <!--
@@ -366,6 +444,8 @@ import {animate as ajsanimate } from 'animejs';
 import NstAssetsImport from './nstAssetsImport.vue';
 import NstTView from './nstTView.vue';
 import MATreeViewNST from '../MediaAssets/treeView_showHide1.json'
+import NstHistory from './nstHistory.vue';
+import NstTItemNode from './nstTItemNode.vue';
 //import NstiFs from './nstiFs.vue';
 //import nstProperty from './nstProperty.vue';
 
@@ -377,11 +457,13 @@ export default{
     components:{ 
         //"NstPropertyRow": nstProperty 
         //"NstKF": NstKF
+        "NstHistory": NstHistory,
         "NstPropSelector": NstPropSelector,
         "NstValueManipulator": NstValueManipulator,
         "NstAnimSelector": NstAnimSelector,
         "NstAssetsImport": NstAssetsImport,
         "NstTView": NstTView,
+        "NstTItemNode": NstTItemNode
         //"NstiFileSystem": NstiFs,
     },
     mounted(){
@@ -424,6 +506,9 @@ export default{
         );
 
         //this.timeLine.restart();
+
+        this.$refs.nstHistoryO.saveStase('mounted');
+
     },
     props:[ 'homeUrl' ],
     data(){
@@ -471,7 +556,7 @@ export default{
 
             getKeyCellWidth: cellWidth,
             
-            divFindName:'',
+            divFindName: ref(''),
             elSelected:null,
             elSelectedIsActive: false,
 
@@ -506,10 +591,10 @@ export default{
             observe: null,
 
             lSelected:-1,
-            layers:[],
+            layers: [],
 
             nstTreePathSelected:[ 
-                [48,1,1,0,2], [48,1,1,0,3,3,2] 
+                //[48,1,1,0,2], [48,1,1,0,3,3,2] ,[47,1,1,0,1]
             ],
             TlTreeView: -1,
 
@@ -520,10 +605,13 @@ export default{
     },
     computed:{
         divSelectedName(){
+            console.log('divSelectedName -> select ('+this.lSelected+') layers',this.layers);
             if( this.lSelected == -1 ) return 'NaN';
-            else{
-                return this.layers[ this.lSelected ].divName;
-            } 
+            else if( 'divName' in this.layers[ this.lSelected ] ){
+                return this.layers[ this.lSelected ]['divName'];
+            } else {
+                return 'NaN2';
+            }
         },
         layelSelected(){
             if( this.lSelected == -1 ) return -1;
@@ -588,6 +676,33 @@ export default{
     },
     
     methods:{
+        getTagNameFrom_layer( layer ){
+            let dName = layer.divName;
+            if( dName == undefined ) return 'ErrTagName2';
+            let tr = document.getElementById( dName.substring(1) );
+            if( tr ) return tr.tagName
+            else return 'ErrTagName';
+        },
+        onEmit_nstHistorySwap( data ){
+            console.log('got history swap !',data);
+            
+            //this.lSelected = -1;
+            this.layers = data.history.layers;
+            this.lSelected = data.history.lSelected;
+            this.divFindName = data.history.divFindName;
+            this.nstTreePathSelected = data.history.nstTreePathSelected;
+
+            let lttlRes = this.nstLibO.getTimeline_FromJsonData( {
+                metadata: this.metadata,
+                layers: toRaw (this.layers )
+            } );
+            this.metadata.timeLine = lttlRes.timeLine;
+
+            $.toast('Undo - '+data.history.note);
+
+
+        },
+
         nstTimeSlideInput_focus(){
             this.$refs.nstTimeSlideInput.focus();
         },
@@ -964,8 +1079,23 @@ export default{
 
         
         onNodeSelectedByTree( data ){
+            //debugger
+            
             this.divFindName=data.selectById; 
+            let tm_nstTreePathSelected = JSON.parse( JSON.stringify( toRaw( this.nstTreePathSelected ) ) );
             this.onDivFindName([]);
+            if( data.event.event.ctrlKey == true ){
+                let oById = document.getElementById( data.selectById );
+                let pathIn = nstConvert.getIndexOfChildReq( oById );
+                //debugger
+                let iT = tm_nstTreePathSelected.findIndex( k => JSON.stringify(k) === JSON.stringify(pathIn) );
+                if( iT == -1 )
+                    tm_nstTreePathSelected.push( pathIn );
+                else
+                    tm_nstTreePathSelected.splice( iT, 1 );
+                this.nstTreePathSelected = tm_nstTreePathSelected;
+                 //debugger
+            }
         },
 
         clearEmptyLayers(){
@@ -1010,9 +1140,48 @@ export default{
                 this.propertiesSelected_Set( layer.kFrames.map( par => par.name ) );
             }
 
-            
+            this.$refs.nstHistoryO.saveStase('make-selected-node_by-div-obj');
         },
 
+        removeLayer_ByName( layerName ){
+            console.log('remove layer:',layerName);
+            let lInd = this.layers.findIndex( l => l.divName == layerName );
+            if( lInd == -1 ){
+                console.error('EE can\'t remove layer ',layerName, ' index -1');
+                return -1;
+            }
+            this.layers.splice( lInd, 1 );
+
+            this.$refs.nstHistoryO.saveStase('remove-layer_by-name_'+layerName);
+        },
+
+
+        removeProperty_ByName( nodeName, properties = []){
+            if( properties == undefined ){
+                console.log('EE wrong properties to remove ',properties,' for nodeName:',nodeName);
+                return -1;
+            }
+
+            let lInd = this.layers.findIndex(l=> l.divName == nodeName );
+            if( lInd == -1 ){
+                console.log('EE no layer found with nodeName: ',nodeName);
+                return -2;
+            } 
+
+            let layer = this.layers[ lInd ];
+
+            let toDel = [];
+            for( let i=0,ic=layer.kFrames.length; i<ic; i++ ){                
+                if( properties.indexOf( layer.kFrames[ i ]['name'] ) != -1 )
+                    toDel.unshift( i );
+
+            }
+            for(let di of toDel ){
+                layer.kFrames.splice( di, 1 );
+            }
+            
+            this.$refs.nstHistoryO.saveStase('remove-property_by-name'+JSON.stringify([nodeName,properties]));
+        },
 
         makeSelectedNode_ByName( nName, properties = [], event = undefined ){
 
@@ -1286,6 +1455,9 @@ export default{
             this.metadata.timeLine = lttlRes.timeLine;
 
             //this.playSelectionMarker( divName );
+
+            this.$refs.nstHistoryO.saveStase('on-add-key-frame');
+
             return 1;
         }
 
@@ -1355,6 +1527,14 @@ export default{
     padding: 5px;
 }
 
+.nstHistoryBar {
+    border: solid 3px rgb(255, 162, 0);
+    border-radius: 5px;
+    display:inline-block;
+}
+.nstHistoryBar button{
+    padding: 5px;
+}
 
 .nstDebugBar{
     border: solid 3px rgb(255, 94, 180);
@@ -1373,8 +1553,23 @@ export default{
 }
 
 .nstLayerTopBar{
-    border: 2px rgb(180, 225, 142) solid;
     border-radius: 10px;
+    padding: 4px 4px; 
+    border-radius:6px;
+    position: relative;
+
+}
+
+.nstTLPropTools{
+    display:inline-block;
+    position:absolute;
+    right: -2px;
+    top:-6px;
+    border-radius: 7px;
+    border: solid 2px #059b11;
+    background-color: #dcdcdc;
+    cursor:pointer;
+    padding:2px;
 }
 
 .nstFrameCssBlock{
