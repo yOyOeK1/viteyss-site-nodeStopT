@@ -80,7 +80,11 @@ import NstValueManipulator from './nstValueManipulator.vue';
 
 export default{
     emits: ['nst-prop-selection-change', 'nst-value-manipulator' ],
-    props:[ 'properties', 'selected', 'layerSelected', 'divSelectedName', 'homeUrl' ],
+    props:[ 
+        'properties', 'selected', 
+        'nstTreePathSelected', 'nstTreeNodesSelected',
+        'layerSelected', 'divSelectedName', 'homeUrl' 
+    ],
     components:{ 
         "NstValueManipulator": NstValueManipulator
     },    

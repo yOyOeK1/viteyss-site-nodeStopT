@@ -3,29 +3,18 @@
     nstAnimSelector of <b>({{ divSelectedName }}) </b> mode:({{ asMode }})
     -->
 
+    <div>
+        selNow: 
+        <div v-for="o in nstTreeNodesSelected"
+            style="display: inline-block;">
+            < {{o.tagName.toLowerCase()}} #{{ o.getAttribute('id') }} />
+        </div>
+    </div>
+
 
     <div class="debBorders" v-if="asMode == 'edit'">
 
-        <div>
-            onBegin -
-            <div title="js Function bind - onBegin" 
-                class="nstBubbleDiv">
-                f(<i class="fa-solid fa-rocket"></i>): 
-                <input type="text" v-model="wantState.onBegin"
-                    style="width:100px;"
-                    @change="onChangeKeyType()" />
-            </div> <br></br>
 
-            onComplete - 
-            <div title="js Function bind - onComplete" 
-                class="nstBubbleDiv">
-                f(<i class="fa-solid fa-rocket"></i>): 
-                <input type="text" v-model="wantState.onComplete"
-                    style="width:100px;"
-                    @change="onChangeKeyType()" />
-            </div>
-
-        </div>
 
         <div>
             Key type:         
@@ -35,8 +24,48 @@
             </select>
         </div>
 
+        <div>
+            <div>            
+                onBegin: 
+                <div title="js Function bind - onBegin" 
+                    class="nstBubbleDiv">
+                    f(<i class="fa-solid fa-rocket"></i>): 
+                    <input type="text" v-model="wantState.onBegin"
+                        style="width:100px;"
+                        @change="onChangeKeyType()" />
+                </div>
+            </div>
 
-        <div v-show="wantState.type =='animate'">
+            <div>
+                onComplete: 
+                <div title="js Function bind - onComplete" 
+                    class="nstBubbleDiv">
+                    f(<i class="fa-solid fa-rocket"></i>): 
+                    <input type="text" v-model="wantState.onComplete"
+                        style="width:100px;"
+                        @change="onChangeKeyType()" />
+                </div>
+            </div>
+
+
+            <div>
+                Ease: 
+                <NstEases 
+                        ref="easeSelectorO"
+                        nameOf="easePlot1"
+                        style="display: inline-block;"
+                        :easeNow="wantState.ease"
+                        @on-ease-selected="onEaseSelected"/>
+            </div>
+
+        </div>
+
+        
+        
+
+
+
+        <div v-show="[ 'animate', 'ani. every', 'ani. stagger' ].indexOf( wantState.type ) != -1">
             Settings for animation:<br></br>
 
             <div title="Loop" class="nstBubbleDiv">
@@ -117,10 +146,20 @@
 </template>
 <script>
 import { toRaw,ref } from 'vue';
+import NstEases from './nstEases.vue';
+
+
 
 export default{
+    components:{
+        "NstEases": NstEases
+    },
     emits: ['nst-animation-change'],
-    props:[ 'asMode', 'selected', 'layerSelected', 'divSelectedName' ],
+    props:[ 
+        'asMode', 
+        'selected', 'nstTreePathSelected', 'nstTreeNodesSelected',
+        'layerSelected', 'divSelectedName' 
+    ],
     data(){    
         return {
             mIsMounted: false,
@@ -130,22 +169,43 @@ export default{
                 type: -1,
                 duration: -1,
                 delay: -1,
-                loop: -1
+                loop: -1,
+                ease: -1
             },
 
-            typesOfAnimation: [ 'set', 'animate', "others"],
+            //typesOfAnimation: ref([]),//[ 'set', 'animate', "others"],
             
         };
     },
     watch:{
         selected( nVal, oVal ){
+            console.log('nstAS @ watch selected changed ! ',JSON.stringify(toRaw(nVal),null,4))
             this.wantState = toRaw( nVal );
-        }        
+            //this.sendUpdateToEase();
+        },
+        
     },  
     computed:{       
-         
+        typesOfAnimation(){
+            if( this.nstTreeNodesSelected.length == 1 ){
+                //this.wantState.type =  'set'; 
+                return [ 'set', 'animate', "others"];
+            }else if( this.nstTreeNodesSelected.length > 1 ){
+                //this.wantState.type = 'set';
+                return [ 'set', 'ani. every', "ani. stagger", "others multi"];
+            }else{
+                //this.wantState.type = 'set';
+                return ['set','oiysh err'];
+            }
+        }
     },
     methods:{
+
+        onEaseSelected( ease ){
+            console.log(' nstAs - on ease selected ',JSON.stringify(ease,null,4));
+            this.wantState.ease = ease.easeStr;
+        },
+
         makeStrFirstLeterBig( str ){
             return makeStrFirstLeterBig( str );
         },

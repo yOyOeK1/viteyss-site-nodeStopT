@@ -67,7 +67,9 @@
             </div>
 
 
-            <div v-if="false" class="nstDebugBar">
+            <div v-if="true" class="nstDebugBar">
+                <button @click="test_setMulti()">sM</button> |
+                <button @click="test_setSingle()">sS</button> |
                 <button @click="onLoad_Start()">fL</button> |
                 <button @click="divFindName='dB'; onDivFindName([]);onAddKeyFrame()">q?</button>
             </div>
@@ -160,7 +162,7 @@
 
 
                 <div 
-                    v-if="lSelected != -1 && showProperties"
+                    v-show="lSelected != -1 && showProperties"
                     style="
                         border:solid darkolivegreen 4px;
                         border-radius: 6px;
@@ -169,7 +171,9 @@
                         margin-top:10px;
                         z-index:2;
                         padding:5px;
-                        max-width:300px;
+                        max-width:290px;
+                        max-height:66vh;
+                        overflow-y: auto;
                         box-shadow: rgb(50, 50, 50) 5px 8px 15px;
 
                     "
@@ -180,6 +184,8 @@
                         :layerSelected="layelSelected"
                         :divSelectedName="divSelectedName"
                         :selected="animeSelected"
+                        :nstTreePathSelected="nstTreePathSelected"
+                        :nstTreeNodesSelected="nstTreeNodesSelected"
                         @nst-animation-change="onEmit_setAnimeChange"
                         />
 
@@ -189,9 +195,11 @@
                         :divSelectedName="divSelectedName"
                         :properties="propertiesSelectedNow"
                         :selected="propertiesSelected"
+                        :nstTreePathSelected="nstTreePathSelected"
+                        :nstTreeNodesSelected="nstTreeNodesSelected"
                         :homeUrl="homeUrl"
                         @nst-prop-selection-change="propertiesSelectedChange"
-                        @nst-value-manipulator="onEmit_setPropertiesOfNobeById"
+                        @nst-value-manipulator="onEmit_setPropertiesOfNode"
                     
                         />
                             
@@ -205,7 +213,7 @@
 
 
                 <button
-                    v-if=" lSelected != -1 "
+                    :disabled=" lSelected == -1 "
                     id="nstInsertKeyFrameNode"
                     title="Insert key frame (+)"
                     @click="onAddKeyFrame();nstTimeSlideInput_focus();"
@@ -394,6 +402,8 @@
     </div>
 
 
+
+
     <br>
     <br>
     <br>
@@ -429,6 +439,16 @@
 <script>
 
 
+
+/*
+
+aajs.animate(['.myDotBox'],{'translateX':aajs.stagger(1),'translateY': aajs.stagger([0.0,-50.0], { ease: 'inOut(2)' }) });
+
+*/
+
+
+
+
 import { toRaw,reactive,ref } from 'vue';
 //import NstKF from './nstKF.vue';
 import {  
@@ -446,6 +466,7 @@ import NstTView from './nstTView.vue';
 import MATreeViewNST from '../MediaAssets/treeView_showHide1.json'
 import NstHistory from './nstHistory.vue';
 import NstTItemNode from './nstTItemNode.vue';
+//import NstEases from './nstEases.vue';
 //import NstiFs from './nstiFs.vue';
 //import nstProperty from './nstProperty.vue';
 
@@ -502,8 +523,19 @@ export default{
             this.TlTreeView.reset();
             console.log('updated ....');
             nstTLMSDiv = $('#nstTLMS');
-            },100
-        );
+
+            
+        },100);
+
+        setTimeout(()=>{
+            //this.nstTreePathSelected = [];
+            console.log('nstMulti - temp force selection two');
+            this.divFindName = 'dB';            
+            this.onDivFindName(-8);
+            this.nstTreePathSelected = [ [ 47, 1, 1, 0, 1 ], [ 47, 1, 1, 0, 0 ] ];
+            this.showProperties = true;
+
+        },500);
 
         //this.timeLine.restart();
 
@@ -583,7 +615,7 @@ export default{
 
             animeSelected:{ type: 'set' },
             propertiesSelected:[],
-            showProperties: true,
+            showProperties: false,
             showImportAssets: false,
             propertiesSelectedNow:{},
             propertiesUpdateDelay:-1,
@@ -594,8 +626,10 @@ export default{
             layers: [],
 
             nstTreePathSelected:[ 
+                //[ 47, 1, 1, 0, 1 ], [ 47, 1, 1, 0, 0 ]
                 //[48,1,1,0,2], [48,1,1,0,3,3,2] ,[47,1,1,0,1]
             ],
+            nstTreeNodesSelected:[],
             TlTreeView: -1,
 
             fileDialogOpen: false,
@@ -647,6 +681,18 @@ export default{
             this.replayTimeScale = nScale;
             //this.timeLine.speed = nScale;
         },
+        nstTreePathSelected( nSel, oSel ){
+            console.log('nstMulti - new selection ',nSel);
+            let tr = [];
+            for( let s of nSel ){
+                let o = nstConvert.getElementFromDomeByIndexPath(
+                    document.body, s
+                );
+                if( o != -1 ) tr.push( o );
+            }
+            this.nstTreeNodesSelected = tr;
+        },
+
         frameNo( nframe, oframe ){
 
             if( nframe < 0 )
@@ -676,6 +722,21 @@ export default{
     },
     
     methods:{
+        test_setMulti(){
+            //this.nstTreePathSelected = [];
+            console.log('nstMulti - temp force selection two');
+            this.divFindName = 'dB';            
+            this.onDivFindName(-8);
+            this.nstTreePathSelected = [ [ 47, 1, 1, 0, 1 ], [ 47, 1, 1, 0, 0 ] ];
+        },
+        test_setSingle(){
+            //this.nstTreePathSelected = [];
+            console.log('nstMulti - temp force selection one');
+            this.divFindName = 'dA';            
+            this.onDivFindName(['top']);
+            this.nstTreePathSelected = [ [ 47, 1, 1, 0, 0 ] ];
+        },
+
         getTagNameFrom_layer( layer ){
             let dName = layer.divName;
             if( dName == undefined ) return 'ErrTagName2';
@@ -710,8 +771,13 @@ export default{
             this.animeSelected = opts.wantState;            
         },
         //onEmit_nstValueManipulator( opts )
-        onEmit_setPropertiesOfNobeById( opts ){
-            this.setPropertiesOfNode_ById( String(this.divSelectedName).substring(1), opts );  
+        //onEmit_setPropertiesOfNobeById
+        onEmit_setPropertiesOfNode( opts ){
+            console.log('nstMulti- \n paths:',this.nstTreePathSelected,'\n objects:',this.nstTreeNodesSelected);
+            
+            for(let o of this.nstTreeNodesSelected )
+                this.setPropertiesOfNode_ById( o.getAttribute('id'), opts );  
+        
         },
         propertiesSelected_Set( props ){
             this.propertiesSelected = props;
@@ -1049,7 +1115,7 @@ export default{
             this.lSelected = -1;
             this.divFindName = '';
             this.propertiesSelected = [];
-            this.showProperties = true;
+            //this.showProperties = true;
 
         },
 
@@ -1083,7 +1149,7 @@ export default{
             
             this.divFindName=data.selectById; 
             let tm_nstTreePathSelected = JSON.parse( JSON.stringify( toRaw( this.nstTreePathSelected ) ) );
-            this.onDivFindName([]);
+            this.onDivFindName(-8);
             if( data.event.event.ctrlKey == true ){
                 let oById = document.getElementById( data.selectById );
                 let pathIn = nstConvert.getIndexOfChildReq( oById );
@@ -1120,24 +1186,31 @@ export default{
             
         },
 
-        makeSelectedNode_ByDivObj( divObj, properties = [] ){    
-            this.clearEmptyLayers();
+        makeSelectedNode_ByDivObj( divObj, properties = [] ){  
+              
+            //this.clearEmptyLayers();
             
             let layer = this.layer_getByDivName( divObj.selector );//layer_get_layerByDivName( this.layers, divObj.selector, this.frameNo );
             this.lSelected = -1;
             this.propertiesSelectedNow = this.getPropertiesOfNode_ById( divObj.selector.substring(1), this.onDivObjPropertiesUpdate );
-            this.animeSelected = this.getAnimeOfNode_layer( layer );
+            if( properties != -8 ) this.animeSelected = this.getAnimeOfNode_layer( layer );
             this.lSelected = this.layers.findIndex( l=>l.divName == divObj.selector ) ;
             this.nstTreePathSelected = [ nstConvert.getIndexOfChildReq( 
                 document.getElementById( divObj.selector.substring(1) )
              ) ];
 
                         
-            if( properties != [] )
-                this.propertiesSelected_Set( properties );            
+            if( properties == -8 ){
 
-            if( this.propertiesSelectedStr == 'all'){
-                this.propertiesSelected_Set( layer.kFrames.map( par => par.name ) );
+            }else{
+            
+                if( properties != [] )
+                    this.propertiesSelected_Set( properties );            
+
+                if( this.propertiesSelectedStr == 'all'){
+                    this.propertiesSelected_Set( layer.kFrames.map( par => par.name ) );
+                }
+
             }
 
             this.$refs.nstHistoryO.saveStase('make-selected-node_by-div-obj');
@@ -1298,7 +1371,7 @@ export default{
                //document.getElementById( byId ).setAttribute( opts.propName, opts.newValue );
 
             } else {
-                //TODO
+                TODO
                 // different then local html dome source of properties ws ?
             }
 
@@ -1332,16 +1405,19 @@ export default{
                 console.log('nst[i] properties from selection props...');
                 tr = {};
                 prop.forEach( p=>
-                tr[ p ] = css[ p ]
-            );
-        }
-        
-        this.propertiesSelected_Set( Object.keys( tr ) );
-        return {
-                'animeOpts': JSON.parse(JSON.stringify(toRaw(this.animeSelected))),
-                'css': css,
-                'keys': tr
-            };
+                    tr[ p ] = css[ p ]
+                );
+            }
+            
+            this.propertiesSelected_Set( Object.keys( tr ) );
+            let aniOpts = JSON.parse(JSON.stringify(toRaw(this.animeSelected)));
+            if( aniOpts['type'] == 'ani. every' ) aniOpts['type'] = 'animate';
+            //debugger
+            return {
+                    'animeOpts': aniOpts,
+                    'css': css,
+                    'keys': tr
+                };
         },
 
 
@@ -1372,6 +1448,24 @@ export default{
 
 
         onAddKeyFrame(){
+            console.log('nstMulti- onAddKeyFrame \n paths:',this.nstTreePathSelected,'\n objects:',this.nstTreeNodesSelected);
+            let tnstps = JSON.parse( JSON.stringify( toRaw( this.nstTreePathSelected )));
+            let propSel = JSON.parse( JSON.stringify( toRaw( this.propertiesSelected ) ) );
+            
+            
+            for(let o of this.nstTreeNodesSelected ){
+                this.divFindName = o.getAttribute('id'); 
+                this.onDivFindName( -8 );
+                this.onAddKeyFrameWithAllSet();
+
+            }
+            this.nstTreePathSelected = tnstps;
+            //this.onAddKeyFrameWithAllSet();
+        },
+
+        onAddKeyFrameWithAllSet(){
+
+        
             let deb = false;
             let cFrame = parseInt(this.frameNo);
             let divName = this.divSelectedName;
@@ -1480,13 +1574,13 @@ export default{
 .nstBubbleDiv{
     border-radius: 7px;
     border: solid #1b3ad5 2px;
-    margin-bottom:5px;
+    margin-bottom:1px;
     margin-right:2px;
     margin:0px;
-    padding-top:5px;
-    padding-bottom:5px;
+    padding-top:2px;
+    padding-bottom:2px;
     padding-right:5px;
-    display:unset;
+    display:inline-block;
     background-color: #ffebeb;
 }
 .nstBubbleDiv input{

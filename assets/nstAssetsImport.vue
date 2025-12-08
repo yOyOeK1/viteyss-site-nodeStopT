@@ -1,15 +1,15 @@
 <style>
 .nstAIassAsRadio {
-    display: inline;
+    display: inline-block;
     border-radius: 5px;
     border: solid rgb(156, 126, 86) 1px;
     background-color: white;
     padding:3px;
     margin-right: 3px;
 }
-
 .nstAIassAsRadio input{
     display: inline;
+     margin:0px; padding:0px;
 }
 .nstAIInline{
     display: inline;

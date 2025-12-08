@@ -37,10 +37,12 @@
             o: {{ isOpen }} lever: {{ level }} name: {{ name }} ch: {{ children.length }}
         </small>
 
+        <small style="font-size: 50%;">{{ pathsSelected }}</small>
         <Transition>
 
             <div 
                 v-if="pathsSelected.length>0"
+                id="nstPathsSelectedDiv"
                 style="
                     padding:12px;
                     margin: 1px 0px;
@@ -111,6 +113,8 @@ import { ref,toRaw } from 'vue';
 import NstTItemNode from './nstTItemNode.vue';
 import { onScroll } from 'animejs';
 
+//import {animate as ajsanimate, onScroll as ajsonScroll } from 'animejs';
+
 export default{
     emits:[ 'onNodeSelected' ],
     components: {
@@ -128,7 +132,12 @@ export default{
         };
     },
     mounted(){
-        setTimeout(()=>this.onRebuild(),200);
+        setTimeout(()=>{
+            console.log('onSc nstItemTreeRoot: ',$('#nstItemTreeRoot'));
+            
+            this.onRebuild();
+           
+        },200);
     },  
     computed:{
         getSelectedListNice(){

@@ -90,9 +90,9 @@ class nstLib{
                             'to': vto
                         };
 
-                        if( opt.onBegin == '' ) delete opt['onBegin'];
+                        if( opt.onBegin == '' || opt.onBegin == undefined ) delete opt['onBegin'];
                         else opt.onBegin = eval( ` self => {${opt.onBegin}}` );
-                        if( opt.onComplete == '' ) delete opt['onComplete'];
+                        if( opt.onComplete == '' || opt.onComplete == undefined ) delete opt['onComplete'];
                         else opt.onComplete = eval( ` self => {${opt.onComplete}}` );
 
                         
@@ -155,8 +155,23 @@ class nstLib{
 
 
 function nstAsset_onload( atype, idd, objThis, positionByDrag = true ){
-    console.log('nstAsset_onload ok idd  type:['+atype+'] idd:',idd);
     let idde = document.getElementById( idd );
+    
+    if( 0 )console.log('nstAsset_onload ok idd  type:['+atype+'] idd: ['+idd+'] node:[',idde,']');
+
+    if( idde == 'null' || idde == null  ){
+        console.log('EE soft -- nstAsset_onload \n',
+            'asset is not load in dome but its call onload :/ try later ....'
+        );
+
+        setTimeout(()=>{
+            nstAsset_onload( atype, idd, objThis, positionByDrag);
+        },500);
+
+        return -1;
+    }
+
+
 
     if( atype == '.svg' )
         SVGInject( objThis, { 'useCache': false, 'makeIdsUnique':false, 'copyAttributes':true,
@@ -226,8 +241,7 @@ async function blobToBase64(blob) {
 
 async function nstImportAsset( pay ){
     console.log('onAI pay:\n', pay);
-    window['nstAsset_onload'] = nstAsset_onload;
-
+    
     let src = '';
     let getExtLost = '';
     if( pay.src.startsWith('data:image/') )
@@ -323,11 +337,11 @@ async function nstImportAsset( pay ){
         ( [ 'localFile', 'http' ].indexOf( pay.assetSrc ) != -1 && nstMediaExtensions.indexOf( pay.fileData.ext ) != -1 )        
     ){
         // pointer-events:none;
-        let tr = `<img style="${propsStyle}" 
+        let tr = nstConvert.dataToNodeStr( propsStyle, idd, src, pay.fileData.ext, drapToPlace );/*`<img style="${propsStyle}" 
         id="${idd}"
         src="${src}"
         alt="pay.fileData.name not loaded :("
-        onload="nstAsset_onload('${pay.fileData.ext}','${idd}', this, ${drapToPlace});">`;
+        onload="nstAsset_onload('${pay.fileData.ext}','${idd}', this, ${drapToPlace});">`;*/
         $('body').append( tr );
 
     }
@@ -336,6 +350,11 @@ async function nstImportAsset( pay ){
 }
 
 var nstConvert = {
+    'dataToNodeStr': ( propsStyle, id, src, ext, drapToPlace ) => {
+        return `<img style="${propsStyle}" id="${id}" src="${src}"
+            alt="Error loading media :(  id:[${id}]  ext:[${ext}] src:[${src.substring(0,50)}...] not loaded :("
+            onload="nstAsset_onload('${ext}','${id}', this, ${drapToPlace});">`;
+    },
     'matrixTo': ( matrixI )=>{
         let tr = {
             'scale': 1.0, 'angle': 0
@@ -416,5 +435,10 @@ var nstConvert = {
     },
 
 };
+
+if( window ){
+    window['nstAsset_onload'] = nstAsset_onload;
+}
+
 
 export { nstLib, nstImportAsset, nstConvert, nstMediaExtensions }

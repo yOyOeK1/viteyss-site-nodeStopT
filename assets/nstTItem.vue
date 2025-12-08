@@ -37,7 +37,7 @@
                 (isSelectedComputed()?'nstTVitemSelected':'')
             )
             ">
-            
+                {{ isSelectedLast }}
                 <section 
                     :id="
                     ('treePath_'+pathNow+iNo+',').replaceAll(',','_')
@@ -133,12 +133,15 @@ export default{
     computed:{
         isSelectedLast(){
             //console.log('myPath',this.myDoomIndexPath);
-            let mPath = this.myDoomIndexPath;//this.myIndexPath();
-            
+            let mPath = JSON.stringify( toRaw(this.myDoomIndexPath) );//this.myIndexPath();
             if( this.pathsSelected.length > 0 ){
                 for( let i=0,ic=this.pathsSelected.length-1; i<=ic; i++ ){
-                    if( this.pathsSelected[i].length-1 == this.level )
-                        return JSON.stringify( mPath ) == JSON.stringify( this.pathsSelected[i].slice(0,this.level+1) );
+                    if( this.pathsSelected[i].length-1 == this.level ){
+                        let tComp = JSON.stringify( this.pathsSelected[i] );
+                        
+                        if(  mPath === tComp )
+                            return true;
+                    }
                 }
     
             }
