@@ -3,9 +3,14 @@
 
     <
     <div
-        style="display: inline; font-size: 75%; opacity: 0.7;"
+        style="display: inline; font-size: 75%;"
         >
-        {{ name.toLowerCase() }}
+            <span v-if="aId != '$Settings'">
+                {{ name.toLowerCase() }}
+            </span>
+            <span v-else>
+                <i class="fa-solid fa-screwdriver-wrench"></i>
+            </span>
     </div> 
     &nbsp;
     <div style="display: inline;">

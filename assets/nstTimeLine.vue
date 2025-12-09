@@ -181,7 +181,32 @@
                     "
                     >
 
+                    <NstLabel 
+                        v-if="'$$Settings' == divSelectedName && propertiesSelected.length == 1 && propertiesSelected[0] == 'labels'"
+                        :properties="propertiesSelected"
+                        :metadata="metadata"
+                        :frameNo="frameNo"
+                        :labelSelected="labelSelected"
+                        @nst-label-set="onEmit_setLabelChange"
+
+                        />
+                    <NstAction 
+                        v-if="
+                            '$$Settings' == divSelectedName && 
+                            propertiesSelected.length == 1 && 
+                            propertiesSelected[0] == 'actions'
+                            "                        
+                        :properties="propertiesSelected"
+                        :metadata="metadata"
+                        :replayTimeScale="replayTimeScale"
+                        :frameNo="frameNo"
+                        :actionsSelected="actionsSelected"
+                        @nst-actions-set="onEmit_setActionsChange"
+                        />
+
+
                     <NstAnimSelector
+                        v-if=" ['$$Settings'].indexOf( divSelectedName ) == -1 "
                         asMode="edit"
                         :layerSelected="layelSelected"
                         :divSelectedName="divSelectedName"
@@ -192,7 +217,7 @@
                         />
 
                     <NstPropSelector 
-                        v-if="1"
+                        v-if=" ['$$Settings'].indexOf( divSelectedName ) == -1 "
                         :layerSelected="layelSelected"
                         :divSelectedName="divSelectedName"
                         :properties="propertiesSelectedNow"
@@ -204,6 +229,20 @@
                         @nst-value-manipulator="onEmit_setPropertiesOfNode"
                     
                         />
+
+
+
+                    <hr></hr>
+                    <input type="checkbox" v-model="closePropertiesAfterAdding"
+                        title="Close this dialog after adding ..." />
+                    <button
+                        id="nstInsertKeyFrameNodeFastBt"
+                        title="Insert key frame (+)"
+                        @click="onAddKeyFrame();( closePropertiesAfterAdding ? showProperties=false : '' )"
+                        ><i class="fa-solid fa-plus"></i>Add</button>
+
+                    <hr>
+                    propertiesSelected:{{ propertiesSelected }}
                             
                 </div>
 
@@ -298,7 +337,8 @@
                     -->
                     
                 </div>
-                <div class="nstTLPropTools">
+                <div class="nstTLPropTools"
+                    v-if="layer.divName != '$$Settings'">
 
                     <!--
                     <i class="fa-regular fa-circle-check"
@@ -347,14 +387,15 @@
 
                                         <i class="fa-regular fa-circle-check"
                                             :title="`Select node: \n\t[${layer.divName}]\nwith property: \n\t[${f.name}]`"
-                                            @click="makeSelectedNode_ByName( layer.divName, [f.name] )"></i> |
+                                            @click="makeSelectedNode_ByName( layer.divName, [f.name] )"></i> 
                                         <!--
                                         <i class="fa-regular fa-copy"
-                                            @click="console.log('TODO')"></i> | 
+                                            @click="console.log('TODO')"></i> 
                                         <i class="fa-solid fa-broom"
-                                            @click="console.log('TODO')"></i> | 
+                                            @click="console.log('TODO')"></i>  
                                         -->
                                         <i class="fa-regular fa-trash-can"
+                                            v-if="layer.divName != '$$Settings'"
                                             @click="removeProperty_ByName( layer.divName, [f.name] )"></i>
 
                                     </div>
@@ -462,13 +503,16 @@ import NstPropSelector from './nstPropSelector.vue';
 import NstValueManipulator from './nstValueManipulator.vue';
 import NstAnimSelector from './nstAnimSelector.vue';
 import { nstConvert, nstImportAsset, nstLib } from '../nstLib';
-import {animate as ajsanimate } from 'animejs';
+import {animate as ajsanimate, utils as ajsutil } from 'animejs';
 import NstAssetsImport from './nstAssetsImport.vue';
 import NstTView from './nstTView.vue';
 import MATreeViewNST from '../MediaAssets/treeView_showHide1.json'
 import MAPropBtNST from '../MediaAssets/propButton3.json'
 import NstHistory from './nstHistory.vue';
 import NstTItemNode from './nstTItemNode.vue';
+
+import NstAction from './nstAction.vue';
+import NstLabel from './nstLabel.vue';
 //import NstEases from './nstEases.vue';
 //import NstiFs from './nstiFs.vue';
 //import nstProperty from './nstProperty.vue';
@@ -487,7 +531,9 @@ export default{
         "NstAnimSelector": NstAnimSelector,
         "NstAssetsImport": NstAssetsImport,
         "NstTView": NstTView,
-        "NstTItemNode": NstTItemNode
+        "NstTItemNode": NstTItemNode,
+        "NstLabel": NstLabel, 
+        "NstAction": NstAction,
         //"NstiFileSystem": NstiFs,
     },
     mounted(){
@@ -532,6 +578,7 @@ export default{
 
             this.TlPropBt.reset();
             this.TlPropBt.speed = 2;
+            ajsutil.set('#nstPropertiesBlock',{'display':'none'});
             console.log('updated ....');
             //nstTLMSDiv = $('#nstTLMS');
 
@@ -544,7 +591,7 @@ export default{
             this.divFindName = 'dB';            
             this.onDivFindName(-8);
             this.nstTreePathSelected = [ [ 47, 1, 1, 0, 1 ], [ 47, 1, 1, 0, 0 ] ];
-            this.showProperties = true;
+            this.showProperties = false;
 
         },500);
 
@@ -624,6 +671,9 @@ export default{
             
             nstTLMS: nstTLMS,
 
+            closePropertiesAfterAdding: true,
+            labelSelected:'',
+            actionsSelected:-1,
             animeSelected:{ type: 'set' },
             propertiesSelected:[],
             showProperties: false,
@@ -798,7 +848,7 @@ export default{
                 layers: toRaw (this.layers )
             } );
             this.metadata.timeLine = lttlRes.timeLine;
-
+            
             $.toast('Undo - '+data.history.note);
 
 
@@ -807,6 +857,20 @@ export default{
         nstTimeSlideInput_focus(){
             this.$refs.nstTimeSlideInput.focus();
         },
+
+        onEmit_setLabelChange( opts ){
+            this.labelSelected = opts.label;
+        },
+        onEmit_setActionsChange( opts ){
+            let ff = nstConvert.parseActionSettings( opts.action );
+
+            if(1) console.log(`nstTL action set: `,JSON.stringify(toRaw(opts),null,4),
+                '\nso after parsing functions:\n',ff
+                );
+            
+            this.actionsSelected = opts.action;
+        },
+
         onEmit_setAnimeChange( opts ){
             this.animeSelected = opts.wantState;            
         },
@@ -843,10 +907,42 @@ export default{
         layer_getByDivName( divName, addToLayers = true ){
 
             let layers = this.layers;
+
+            // if zero add settings / labels / actions layer START
+            if( layers.length == 0 ){
+                layers.push({
+                    divName: '$$Settings',
+                    order: -1,
+                    isVisible: true,
+                    domType: 'settings',
+                    domSrcOver: 'local',
+                    nodeObservator: null,
+                    obj: null,//$(divName),
+                    frameAddedAt: 0,
+                    kFrames: [
+                        {
+                            "name": "labels",
+                            "keys": new Array( this.framesTotal ),
+                            "lHelpers": new Array( this.framesTotal ),
+                        },
+                        {
+                            "name": "actions",
+                            "keys": new Array( this.framesTotal ),
+                            "lHelpers": new Array( this.framesTotal ),
+                        }
+                    ],
+                    propertiesNow: {}
+                });
+
+
+
+            }
+            // if zero add settings / labels / actions layer END
+
+
             let lId = layers.findIndex( l=>l.divName==divName);
-            //debugger
             if( lId != -1 ) return layers[ lId ];
-            else{
+            else if( divName != '$Settings' ){
                 let layer = {
                     divName: String(divName),
                     order: 0,
@@ -859,10 +955,9 @@ export default{
                     kFrames: [],
                     propertiesNow: {}
                 };
+
                 if( addToLayers == true )
                     layers.push( layer );
-
-
                 
                 return layer;
             }
@@ -1049,7 +1144,6 @@ export default{
 
         
         onAssetsImport( pay ){          
-            //debugger  
             console.log('on Assets import\n ------------------------\n',
                 'pay got :\n',pay,'\n---------------------------'
             );
@@ -1161,17 +1255,21 @@ export default{
 
 
         onDivFindName( properties = [] ){
-            let lookRes = $(`#${this.divFindName}`);
-            console.log('div find name .... ['+this.divFindName+'] have ('+lookRes.length+')'
-            );
+            if( this.divFindName == '$Settings' ){
+                this.makeSelectedNode_ByDivObj( {selector:'$'+this.divFindName}, properties );
+                
+                return 1;
+            }
 
+
+            let lookRes = $(`#${this.divFindName}`);
+            console.log('div find name .... ['+this.divFindName+'] have ('+lookRes.length+')' );
             console.log('[',lookRes,']',' typeof ', typeof lookRes);
 
             if( this.divFindName == '' ){
                 this.unSelectElement();
                 return 1;
             }
-
 
             if( lookRes.length == 1 ){
                 this.makeSelectedNode_ByDivObj ( lookRes, properties );
@@ -1229,15 +1327,31 @@ export default{
         makeSelectedNode_ByDivObj( divObj, properties = [] ){  
               
             //this.clearEmptyLayers();
-            
             let layer = this.layer_getByDivName( divObj.selector );//layer_get_layerByDivName( this.layers, divObj.selector, this.frameNo );
             this.lSelected = -1;
-            this.propertiesSelectedNow = this.getPropertiesOfNode_ById( divObj.selector.substring(1), this.onDivObjPropertiesUpdate );
             if( properties != -8 ) this.animeSelected = this.getAnimeOfNode_layer( layer );
             this.lSelected = this.layers.findIndex( l=>l.divName == divObj.selector ) ;
+
+            if( divObj.selector == '$$Settings' ){
+                this.propertiesSelected_Set( properties );
+                console.log('nstTL makeSelectedNode_ByDivObj\n$$Settings .... prop:',properties);
+
+                let labActId = this.layers[ this.lSelected ]['kFrames'].findIndex( k=> k.name == properties[0] );
+                if( labActId == -1 ) return -1;
+                if( properties[0] == 'labels' ){
+                    this.labelSelected = this.layers[ this.lSelected ]['kFrames'][ labActId ]['keys'][ this.frameNo ];   
+                }else if( properties[0] == 'actions' ){
+                    this.actionsSelected = this.layers[ this.lSelected ]['kFrames'][ labActId ]['keys'][ this.frameNo ];
+                }
+
+
+                return 1;
+            }
+            
+            this.propertiesSelectedNow = this.getPropertiesOfNode_ById( divObj.selector.substring(1), this.onDivObjPropertiesUpdate );
             this.nstTreePathSelected = [ nstConvert.getIndexOfChildReq( 
                 document.getElementById( divObj.selector.substring(1) )
-             ) ];
+            ) ];
 
                         
             if( properties == -8 ){
@@ -1306,11 +1420,11 @@ export default{
                 let divSize = [ divOnC.width(), divOnC.height() ];
                 let seekN = mMapVal( pointC[0], 0, divSize[0], 0,1 );
                 let tFrame = parseInt( this.framesTotal * seekN );
-                console.log('event seek to ?',
-                    '\n divSize:', divSize,
-                    '\n seekN:',seekN,
-                    '\n newFrame: ',tFrame
-                );
+                if(0)console.log('event seek to ?',
+                        '\n divSize:', divSize,
+                        '\n seekN:',seekN,
+                        '\n newFrame: ',tFrame
+                    );
                 this.frameNo = tFrame;
 
             }
@@ -1488,7 +1602,30 @@ export default{
 
 
         onAddKeyFrame(){
-            console.log('nstMulti- onAddKeyFrame \n paths:',this.nstTreePathSelected,'\n objects:',this.nstTreeNodesSelected);
+            console.log('nstMulti- onAddKeyFrame ',
+                '\n paths tree selected:',this.nstTreePathSelected,
+                '\n objects tree:',this.nstTreeNodesSelected);
+
+
+            if( this.divFindName == '$Settings'){
+                if( this.propertiesSelected == 'labels' ){
+                    let labId = this.layers[ this.lSelected ]['kFrames'].findIndex( k=> k.name == 'labels' );
+                    if( labId == -1 ) return -1;
+                    this.layers[ this.lSelected ]['kFrames'][ labId ]['keys'][ this.frameNo ] = `${this.labelSelected}`;
+
+                }else if( this.propertiesSelected == 'actions' ){
+                    let actId = this.layers[ this.lSelected ]['kFrames'].findIndex( k=> k.name == 'actions' );
+                    if( actId == -1 ) return -1;
+                    this.layers[ this.lSelected ]['kFrames'][ actId ]['keys'][ this.frameNo ] = 
+                        JSON.parse( JSON.stringify( toRaw( this.actionsSelected ) ) );
+
+                }
+
+                return 1;
+            }
+
+
+
             let tnstps = JSON.parse( JSON.stringify( toRaw( this.nstTreePathSelected )));
             let propSel = JSON.parse( JSON.stringify( toRaw( this.propertiesSelected ) ) );
             
@@ -1587,6 +1724,7 @@ export default{
             console.log('timeline rebuild result\n---------------------------------\n',
                 lttlRes);
             this.metadata.timeLine = lttlRes.timeLine;
+            window['tl1'] = lttlRes.timeLine;
 
             //this.playSelectionMarker( divName );
 

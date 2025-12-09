@@ -53,8 +53,32 @@ class nstLib{
                     let tStart = i * metadata.frameMs;
                     
                     let opt = {};
+                    
+                    if( animOpts==null || animOpts == '' ){
 
-                    if( animOpts==null){
+                        if( divName == '$$Settings' && v != null){
+                            if( propName == 'labels' ){
+
+                                tl.label( v, tStart );
+
+                            }else if( propName == 'actions' ){
+
+                                let ff = nstConvert.parseActionSettings( propVal );
+                                let tlR = tl;
+                                let callIt = () => {
+                                    for( let tfk of Object.keys( ff ) ){
+                                        console.log(`   - exec action (${tStart}) ms.: `+tfk);
+                                        ff[ tfk ]( tlR );
+
+                                        //debugger
+                                    }
+                                };
+                                tl.call( callIt, tStart );
+                                    
+
+                            }
+
+                        }
 
                     }else if( animOpts.type == 'set' ){
 
@@ -428,11 +452,24 @@ var nstConvert = {
             tr.unshift( ind );
             return nstConvert.getIndexOfChildReq( oLookFor.parentNode, tr );
         }
-
-
-
-
     },
+
+    'parseActionSettings': ( action ) => {
+        let tr = {};
+        if( 'stop' in action && action.stop ) tr['1_stop'] = function ( tl ){ tl.pause(); };
+        if( 'play' in action && action.play ) tr['2_play'] =  function ( tl ){ tl.play(); };
+        if( 'gotov' in action && action.goto  ) tr['3_goto'] = function( tl ){ tl.seek( action.gotov ); };
+        if( 'speedv' in action && action.speed ) tr['4_speed'] = function( tl ){tl.speed = action.speedv; };
+        if( 'fpsv' in action && action.fps ) tr['5_fps'] = function( tl ){ tl.fps = action.fpsv; };
+        if( 'funcv' in action && action.func ) tr['6_func'] = function( tl ){
+            try{
+                eval( action.funcv )(tl);
+            }catch(e){
+                console.log(`EE  on action settings at....678`);
+            }
+        };
+        return tr;
+    }
 
 };
 

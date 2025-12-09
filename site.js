@@ -146,7 +146,7 @@ class site{
     window['nstLastKey'] = keyCode;
     let focusOn = document.activeElement;
     console.log('focuse on ['+focusOn.tagName+']');
-    if( focusOn.tagName == 'INPUT' ) return 1;
+    if( ['INPUT','TEXTAREA' ].indexOf( focusOn.tagName ) != -1 ) return 1;
 
 
     if( keyCode.key == '?' || keyCode.key == 'h' ){
