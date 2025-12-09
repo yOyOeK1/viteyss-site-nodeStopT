@@ -1,0 +1,367 @@
+{
+    "metadata": {
+        "fps": 10,
+        "framesTotal": 20,
+        "timeLine": -1,
+        "frameMs": 100,
+        "framesTotalMs": 1900,
+        "assets": []
+    },
+    "layers": [
+        {
+            "divName": "#dB",
+            "order": 0,
+            "isVisible": true,
+            "domType": "html",
+            "domSrcOver": "local",
+            "nodeObservator": null,
+            "obj": "",
+            "frameAddedAt": 0,
+            "kFrames": [],
+            "propertiesNow": {}
+        },
+        {
+            "divName": "#nstPropertiesShowNode",
+            "order": 0,
+            "isVisible": true,
+            "domType": "html",
+            "domSrcOver": "local",
+            "nodeObservator": null,
+            "obj": "",
+            "frameAddedAt": 0,
+            "kFrames": [
+                {
+                    "name": "background-color",
+                    "keys": [
+                        "rgb(26, 26, 26)",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "rgb(188, 193, 12)",
+                        "rgb(103, 193, 12)",
+                        "rgb(188, 193, 12)",
+                        "rgb(193, 80, 12)",
+                        "rgb(60, 193, 12)",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "rgb(26, 26, 26)"
+                    ],
+                    "lHelpers": [
+                        {
+                            "type": "set",
+                            "loop": null,
+                            "ease": "outSine"
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": null,
+                            "ease": "outSine"
+                        },
+                        {
+                            "type": "set"
+                        },
+                        {
+                            "type": "set",
+                            "loop": null,
+                            "ease": "outSine"
+                        },
+                        {
+                            "type": "set",
+                            "loop": null,
+                            "ease": "outSine"
+                        },
+                        {
+                            "type": "set",
+                            "loop": null,
+                            "ease": "outSine"
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": null,
+                            "ease": "outSine"
+                        }
+                    ]
+                },
+                {
+                    "name": "filter",
+                    "keys": [
+                        "blur(0px)",
+                        "blur(2px)",
+                        null,
+                        "blur(0px)",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "lHelpers": [
+                        {
+                            "type": "set",
+                            "loop": null,
+                            "ease": "outSine"
+                        },
+                        {
+                            "type": "set",
+                            "loop": null,
+                            "ease": "outSine"
+                        },
+                        null,
+                        {
+                            "type": "set",
+                            "loop": null,
+                            "ease": "outSine"
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
+                    ]
+                },
+                {
+                    "name": "color",
+                    "keys": [
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "rgb(255, 255, 255)",
+                        null,
+                        "rgb(0, 0, 0)",
+                        null,
+                        "rgb(255, 255, 255)",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "lHelpers": [
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": null,
+                            "ease": "outBounce"
+                        },
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": null,
+                            "ease": "inOutSine"
+                        },
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": null,
+                            "ease": "inOutSine"
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
+                    ]
+                }
+            ],
+            "propertiesNow": {}
+        },
+        {
+            "divName": "#nstPropertiesBlock",
+            "order": 0,
+            "isVisible": true,
+            "domType": "html",
+            "domSrcOver": "local",
+            "nodeObservator": null,
+            "obj": "",
+            "frameAddedAt": 0,
+            "kFrames": [
+                {
+                    "name": "height",
+                    "keys": [
+                        "0px",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "450px",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "0px"
+                    ],
+                    "lHelpers": [
+                        {
+                            "type": "set",
+                            "loop": null,
+                            "ease": "outSine"
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": null,
+                            "ease": "outSine"
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": null,
+                            "ease": "inSine"
+                        }
+                    ]
+                },
+                {
+                    "name": "opacity",
+                    "keys": [
+                        "1",
+                        "1",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "1",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "1",
+                        "1"
+                    ],
+                    "lHelpers": [
+                        {
+                            "type": "set",
+                            "loop": null,
+                            "ease": "outSine"
+                        },
+                        {
+                            "type": "animate",
+                            "loop": null,
+                            "ease": "outSine"
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": null,
+                            "ease": "outSine"
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        {
+                            "type": "animate",
+                            "loop": null,
+                            "ease": "outSine"
+                        },
+                        {
+                            "type": "set",
+                            "loop": null,
+                            "ease": "outSine"
+                        }
+                    ]
+                }
+            ],
+            "propertiesNow": {}
+        }
+    ]
+}

@@ -154,6 +154,7 @@
 
                 <button 
                     :disabled="lSelected==-1"
+                    id="nstPropertiesShowNode"
                     @click="showProperties = !showProperties"
                     >
                     <i :class="'fa-solid fa-caret-'+(showProperties ? 'up' : 'down')"></i>
@@ -162,7 +163,8 @@
 
 
                 <div 
-                    v-show="lSelected != -1 && showProperties"
+                    v-show="1 || lSelected != -1 && showProperties"
+                    id="nstPropertiesBlock"
                     style="
                         border:solid darkolivegreen 4px;
                         border-radius: 6px;
@@ -464,6 +466,7 @@ import {animate as ajsanimate } from 'animejs';
 import NstAssetsImport from './nstAssetsImport.vue';
 import NstTView from './nstTView.vue';
 import MATreeViewNST from '../MediaAssets/treeView_showHide1.json'
+import MAPropBtNST from '../MediaAssets/propButton3.json'
 import NstHistory from './nstHistory.vue';
 import NstTItemNode from './nstTItemNode.vue';
 //import NstEases from './nstEases.vue';
@@ -515,6 +518,9 @@ export default{
        //console.log('html is :',$('#htmlDynoHandler'));
        let TlTreeViewRes = this.nstLibO.getTimeline_FromJsonData( MATreeViewNST );
        this.TlTreeView = toRaw( TlTreeViewRes['timeLine'] );
+
+       let TlPropBtRes = this.nstLibO.getTimeline_FromJsonData( MAPropBtNST );
+       this.TlPropBt = toRaw( TlPropBtRes['timeLine'] );
        //console.log('html is 2:',$('#htmlDynoHandler'),TlTreeViewRes);
 
         setTimeout(()=>{
@@ -523,6 +529,11 @@ export default{
             this.TlTreeView.reset();
             console.log('updated ....');
             nstTLMSDiv = $('#nstTLMS');
+
+            this.TlPropBt.reset();
+            this.TlPropBt.speed = 2;
+            console.log('updated ....');
+            //nstTLMSDiv = $('#nstTLMS');
 
             
         },100);
@@ -631,6 +642,7 @@ export default{
             ],
             nstTreeNodesSelected:[],
             TlTreeView: -1,
+            TlPropBt: -1,
 
             fileDialogOpen: false,
             fileDialogOperation: '',
@@ -677,6 +689,34 @@ export default{
 
     },
     watch:{
+        showProperties( nS, oS ){
+            console.log(`nstTL @ watch showProperties change `,nS,' from ',oS);
+            let mitT = 500;
+            if( nS == true ){
+                this.TlPropBt.seek(0);
+                this.TlPropBt.play();
+                $('#nstPropertiesBlock').show();
+                setTimeout(()=>{
+                    this.TlPropBt.pause();
+                    //this.TlPropBt.seek(1000);
+
+                },mitT);
+            }else {
+                this.TlPropBt.seek(1000);
+                this.TlPropBt.play();
+                setTimeout(()=>{
+                    this.TlPropBt.reset(true);
+                    $('#nstPropertiesBlock').hide();
+
+
+                },mitT);
+            }
+
+
+
+
+
+        },
         replayTimeScale( nScale, oScale ){
             this.replayTimeScale = nScale;
             //this.timeLine.speed = nScale;

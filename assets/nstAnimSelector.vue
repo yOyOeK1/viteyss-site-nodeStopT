@@ -48,7 +48,7 @@
             </div>
 
 
-            <div>
+            <div v-show="[ 'animate', 'ani. every', 'ani. stagger' ].indexOf( wantState.type ) != -1">
                 Ease: 
                 <NstEases 
                         ref="easeSelectorO"
@@ -213,6 +213,7 @@ export default{
             console.log('changed ! animation to: ',this.wantState.type);//,this.$refs.selectedTypeSel.value);
             
             let tr = toRaw(this.wantState);
+            if( tr.type == 'set' ) delete tr['ease'];
             tr['loop'] = parseInt( tr['loop'] );
             this.$emit('nst-animation-change', { 
                 pName: this.divSelectedName, 
