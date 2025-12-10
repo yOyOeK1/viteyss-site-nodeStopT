@@ -1,4 +1,4 @@
-<template>
+<template v-if="labelSelected">
     <b>Set label:</b>
 
     <div>
@@ -19,12 +19,17 @@ export default{
     props:[ 'labelSelected','properties', 'metadata', 'frameNo' ],
     emits:[ 'nst-label-set' ],
     data(){
+        //console.log('nstL 1 [',this.labelSelected,'] len:',this.labelSelected.length );
+
         return {
             isLabel: this.labelSelected
         };
     },
     watch:{
-        labelSelected( nv, ov ){ this.isLabel = this.labelSelected; },
+        labelSelected( nv, ov ){ 
+            console.log('nstL 2 ',this.labelSelected);
+            this.isLabel = this.labelSelected; 
+        },
     }
 
 

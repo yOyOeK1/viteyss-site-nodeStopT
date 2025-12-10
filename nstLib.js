@@ -465,9 +465,24 @@ var nstConvert = {
             tl.pause();
             //tl.seek( action.gotov, true );
             setTimeout(()=>{
-                tl.reset();
-                console.log('tl seek id :',tl.id);                
-                tl.currentTime = action.gotov; 
+                //tl.r();
+
+                let gotovStr = `${action.gotov}`;
+                let gotovInt = parseInt( gotovStr );
+                let gotov = '';
+                if( `${gotovInt}` == 'NaN' ){
+                    if( gotovStr in tl.labels )
+                        gotov = tl.labels[ gotovStr ];
+                    else{
+                        console.log('EE refere to label not existing ['+gotovStr+']');
+                        return -1;
+                    }
+                }else
+                    gotov = gotovInt;
+                
+
+                console.log('tl seek id :',tl.id,' gotov: ['+gotov+'] org: ['+gotovStr+']');                
+                tl.seek( gotov ); 
                 tl.play();
             },1);
             

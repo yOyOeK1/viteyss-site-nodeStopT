@@ -107,7 +107,7 @@ export default{
         let moc = this.mObj.children;
         aId = this.mObj.getAttribute('id');
         if( aId == null ) aId = '';
-        console.log('doing childrens id: ['+aId+'] for level: ',this.level, '  ', moc.length);
+        //console.log('doing childrens id: ['+aId+'] for level: ',this.level, '  ', moc.length);
         
         if( aId == 'nstItemTreeRoot' ){
             isOpen = false;

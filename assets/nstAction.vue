@@ -162,11 +162,7 @@ export default{
         },
         onChange(){
             if( this.isMounted == false ) return 1;
-            let gotovStr = `${toRaw( this.isGOTOValue )}`;
-            let gotovInt = parseInt( gotovStr );
-            console.log('gotov int is type of ',(typeof gotovInt),
-                `\n and [${gotovInt}] `);
-            let gotov = `${gotovInt}` == 'NaN' ? gotovStr : gotovInt;
+            let gotov = `${toRaw( this.isGOTOValue )}`;
             let speedv = parseFloat( toRaw( this.isSpeedValue ) );
             let fpsv = parseInt( toRaw( this.isFPSValue ) );
             let funcv = toRaw( this.isFuncionValue );            

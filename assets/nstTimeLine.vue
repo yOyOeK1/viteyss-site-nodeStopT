@@ -31,8 +31,8 @@
             min="0"
             :max="framesTotal-1"
             step="1"
-            v-model="frameNo"
-            @change="setFrameNo"></input>
+            :value="frameNo"
+            @input="setFrameNo"></input>
     </div>
     
        
@@ -410,10 +410,11 @@
 
                                 <!-- old -->
                                 <div style=""
+                                    :id="'XXnst'+layer.divName.substring(2)+'_'+f.name"
                                     >
                                     <div v-for="(value,index) in f.keys"
                                         :style="
-                                            'width:'+getKeyCellWidth+'px;'+
+                                            'width:'+UIkeyCellWidth+'px;'+
                                             'left:0px;'
                                             "
                                         :title="value!=null?'property [ '+f.name+' ] = '+value:'select this cell [ '+f.name+' ] at frame: '+index"
@@ -425,7 +426,8 @@
                                             "
                                         @click="setFrameNo( index ); makeSelectedNode_ByName( layer.divName, [f.name] ); nstTimeSlideInput_focus();"
                                         >
-                                        <small >
+                                        <small 
+                                            class="nstCell">
                                             {{ value }}                                            
                                         </small>
                                     </div>
@@ -505,7 +507,7 @@ import NstPropSelector from './nstPropSelector.vue';
 import NstValueManipulator from './nstValueManipulator.vue';
 import NstAnimSelector from './nstAnimSelector.vue';
 import { nstConvert, nstImportAsset, nstLib } from '../nstLib';
-import {animate as ajsanimate, utils as ajsutil } from 'animejs';
+import {animate as ajsanimate, stagger as ajsstagger, utils as ajsutil } from 'animejs';
 import NstAssetsImport from './nstAssetsImport.vue';
 import NstTView from './nstTView.vue';
 import MATreeViewNST from '../MediaAssets/treeView_showHide1.json'
@@ -595,6 +597,8 @@ export default{
             this.nstTreePathSelected = [ [ 47, 1, 1, 0, 1 ], [ 47, 1, 1, 0, 0 ] ];
             this.showProperties = false;
 
+            this.onWindowResize( window.innerWidth, window.innerHeight);
+
         },500);
 
         //this.timeLine.restart();
@@ -612,8 +616,6 @@ export default{
         let framesTotalMs = frameMs* (framesTotal-1);
 
         let nstTLMS = -1;
-        let cellWidth = (window.innerWidth - 100) / (framesTotal - 1) ;
-
         let nstl = new nstLib();
 
         return {
@@ -646,7 +648,7 @@ export default{
 
             iterator: null,
 
-            getKeyCellWidth: cellWidth,
+            UIkeyCellWidth: ref(1.00),
             
             divFindName: ref(''),
             elSelected:null,
@@ -737,7 +739,7 @@ export default{
                 else
                     return 'No id . . <'+tagName+'>';
             };
-        },
+        }
 
     },
     watch:{
@@ -788,6 +790,7 @@ export default{
             this.nstTreeNodesSelected = tr;
         },
 
+        /*
         frameNo( nframe, oframe ){
             return -1;
             if( nframe < 0 )
@@ -814,6 +817,7 @@ export default{
             }
             //this.onSeekSet();
         }
+            */
     },
     
     methods:{
@@ -839,6 +843,39 @@ export default{
             if( tr ) return tr.tagName
             else return 'ErrTagName';
         },
+        nstTimeSlideInput_focus(){
+            this.$refs.nstTimeSlideInput.focus();
+        },
+
+        onWindowResize( w = undefined, h = undefined, framesTotal = undefined ){
+            //console.log(`nstTL on resize - `,w,' x ',h,' with total frames:',framesTotal);
+            let rMargin = 60;
+            if( framesTotal == undefined ) framesTotal = this.framesTotal;
+            if( w == undefined ){
+                this.UIkeyCellWidth = 2;                
+            } else {            
+                let tmpO = { 
+                    'wtarget': (w - rMargin) / ( framesTotal - 1),
+                    'wstart': this.UIkeyCellWidth,
+                    'w':0  };
+                let upDateFunc = () =>{
+                    //console.log('nstTL_w compute animation START',tmpO);
+                    ajsanimate( tmpO, {
+                        autoplay:true,
+                        duration:500,
+                        ease: 'outSine',
+                        fps: 30,
+                        'w': [tmpO.wstart, tmpO.wtarget],
+                        onUpdate:()=>{
+                            //console.log('nstTL_w compute animation ',tmpO.w);
+                            this.UIkeyCellWidth = tmpO.w;
+                        }
+                    });
+                };
+               mkTrashHold( 'nstTL_w_resize', upDateFunc, 550 );
+            }
+            //console.log(`nstTL on cell [${this.UIkeyCellWidth}]`);
+        },
         onEmit_nstHistorySwap( data ){
             console.log('got history swap !',data);
             
@@ -859,9 +896,6 @@ export default{
 
         },
 
-        nstTimeSlideInput_focus(){
-            this.$refs.nstTimeSlideInput.focus();
-        },
 
         onEmit_setLabelChange( opts ){
             this.labelSelected = opts.label;
@@ -1097,8 +1131,10 @@ export default{
         },
 
 
-        setFrameNo( e ){
-            console.log('nstTl setFrameNo [',e,'] type ['+(typeof e)+']');
+        setFrameNo( e = '',b='' ){
+            console.log('nstTl setFrameNo \n\te:[',e,']\n\tb:[',b,'] \nplaying ['+this.isPlaying+'] type ['+(typeof e)+']');
+            if( this.isPlaying ) return 1;
+
             let fNo = 0;
             if( typeof e != 'number' ){
                 fNo = parseInt( e.target.value );                
@@ -1456,10 +1492,11 @@ export default{
             for(let di of toDel ){
                 layer.kFrames.splice( di, 1 );
             }
-            
+            this.makeSelectedNode_ByName 
             this.$refs.nstHistoryO.saveStase('remove-property_by-name'+JSON.stringify([nodeName,properties]));
         },
 
+        /*** For timeline clicks : if event parameter added */
         makeSelectedNode_ByName( nName, properties = [], event = undefined ){
 
             console.log(' make selected node by name :',nName, '\nprops:',properties,'\nevent: ',event);
@@ -1475,9 +1512,56 @@ export default{
                         '\n seekN:',seekN,
                         '\n newFrame: ',tFrame
                     );
-                this.frameNo = tFrame;
 
+ 
+                this.setFrameNo( tFrame );
+                
             }
+            
+            setTimeout(()=>{
+                console.log('grid stager start ', properties);
+                
+                for( let propName of properties){
+                    let obR = document.getElementById(`XXnst${nName.substring(2)}_${propName}`);
+                    console.log('obR ',obR);
+                    if( obR == null ) return -1;
+                    let chil = obR.children;
+                    if( chil.length == 0 ) return -1;
+                    let grid = [ chil.length, 0 ];
+                    ajsanimate( chil, {
+                        scale: [
+                            { to: [1.0, ajsstagger([1.2,0.5], {
+                                    grid,
+                                    min: 1,
+                                    from: parseInt(this.frameNo)
+                                })] },
+                            { to: 1 }
+                        ],
+                        boxShadow: [
+                            { to: '0 0 0.5rem 0 currentColor' },
+                            { to: '0 0 0rem 0 currentColor' }
+                        ],
+                        delay: ajsstagger(60, {
+                            grid,
+                            from: parseInt(this.frameNo)
+                        }),
+                        duration:300
+                    });
+
+                }
+                /*
+                ajsanimate(chil,{
+                    scale: [ 
+                        { to: ajsstagger('-.01', { grid, from, axis: 'x' }) },
+                        { to: 1.0, ease: 'inOutQuad', }
+                    ],
+                    delay: ajsstagger( 10, { grid, from }), 
+                    duration: 200 ,
+                    onUpdate: (e)=>{
+                        console.log('grid ....');
+                    }
+                });*/
+            },50);
             
             this.divFindName = nName.substring(1);
             this.onDivFindName( properties );
