@@ -1,11 +1,13 @@
 <template class="nst">
-    <div class="nstInfoNowBar">
+    <div class="nstInfoNowBar"
+        id="nstInfoNowBar" >
         frame: ({{ frameNo }}/{{ framesTotal}}) | ms: ({{frameNoAtMs}}) |
         selected: ({{ divSelectedName }}) / ({{ propertiesSelectedStr }}) | observs: ({{ observeAtId }}) |
         aSelected: (
             <!--
                 {{ animeSelected }}) 
-            -->
+                -->
+
             <NstAnimSelector 
                 style="display: inline;"
                 asMode="viewMini"
@@ -20,7 +22,8 @@
    
 
     <div
-        class="nstTimeLine">
+        class="nstTimeLine"
+        id="nstSeekNow">
         <!--
             Time:<br></br>
         -->
@@ -44,7 +47,8 @@
         
 
         <div class="nstBox1">
-            <div class="nstControlsBar">
+            <div class="nstControlsBar"
+                id="nstControlsBar">
                 <button @click="setFrameNo( 0 ); nstTimeSlideInput_focus();" title="|< to start"><i class="fa-solid fa-backward-step"></i></button>
                 <button @click="setFrameNo( frameNo-1 );nstTimeSlideInput_focus();"title="< one left"><i class="fa-solid fa-backward"></i></button>
                 <button v-if="isPlaying"
@@ -63,13 +67,32 @@
                 <button @click="setFrameNo( framesTotal );nstTimeSlideInput_focus();" title=">| to end"><i class="fa-solid fa-forward-step"></i></button>
             </div>
 
-            <div class="nstDebugBar">
+            <div class="nstDebugBar"
+                id="nstLoadSaveBar">
                 <button @click="onLoadToLocal()" title="Load node stop time file or json"><i class="fa-solid fa-upload"></i></button>
                 <button @click="onSaveToLocal()" title="Save node stop time file"><i class="fa-solid fa-floppy-disk"></i></button>
             </div>
 
+            <div class="nstDebugBar"
+                id="nstAnimationUiBar">
+                <input type="checkbox" 
+                    title="Animate Ui"
+                    v-model="doAnimations" 
+                    id="nstAniUi"
+                    style="display:none;" />
+                <button @click="doAnimations=!doAnimations">
+                   <i v-if="doAnimations" class="fa-solid fa-gauge"
+                        style="color:orange;"
+                        title="Disable animation of Ui"></i>
+                   <i v-else class="fa-solid fa-gauge-high"
+                        title="Enable animation of Ui"></i>
+                </button>
+                
+            </div>
 
-            <div v-if="true" class="nstDebugBar">
+            
+            <div v-if="true" class="nstDebugBar"
+                id="nstDebugTmpBar">
                 <button @click="test_setMulti()">sM</button> |
                 <button @click="test_setSingle()">sS</button> |
                 <button @click="onLoad_Start()">fL</button> |
@@ -81,7 +104,8 @@
                 <button @click="$refs.nstHistoryO.echo('hi')">o</button>
             -->
 
-            <div class="nstHistoryBar">
+            <div class="nstHistoryBar"
+                id="nstHistoryBar">
                 <NstHistory 
                     ref="nstHistoryO"
                     :layers="layers"
@@ -95,7 +119,8 @@
 
 
             <div
-                class="nstFindBar">
+                class="nstFindBar"
+                id="nstFindDivBar">
 
                 <button
                     title="Import assets to canvas"
@@ -157,6 +182,7 @@
                 <button 
                     :disabled="lSelected==-1"
                     id="nstPropertiesShowNode"
+                    title="Properties of selected label / property ..."
                     @click="showProperties = !showProperties"
                     >
                     <i :class="'fa-solid fa-caret-'+(showProperties ? 'up' : 'down')"></i>
@@ -210,7 +236,6 @@
                     <NstAnimSelector
                         v-if=" ['$$Settings'].indexOf( divSelectedName ) == -1 "
                         asMode="edit"
-                        :layerSelected="layelSelected"
                         :divSelectedName="divSelectedName"
                         :selected="animeSelected"
                         :nstTreePathSelected="nstTreePathSelected"
@@ -242,9 +267,16 @@
                         title="Insert key frame (+)"
                         @click="onAddKeyFrame();( closePropertiesAfterAdding ? showProperties=false : '' )"
                         ><i class="fa-solid fa-plus"></i>Add</button>
-
-                    <hr>
-                    propertiesSelected:{{ propertiesSelected }}
+                    
+                        
+                        <hr>
+<pre style="font-size: 75%;">
+ Current frame:   .....  {{frameNo}} @ {{frameNo*metadata.frameMs}} ms.
+ Multi selection:  ....  [ <div v-for="o in nstTreeNodesSelected" style="display: inline-block;" >< {{o.tagName.toLowerCase()}} #{{ o.getAttribute('id') }} /> </div> ]
+ Properties selected: .  [ {{ `${propertiesSelected}` }} ]
+ Properties @:    .....  {{ 1 }} //TODO
+ Dom info. :    .......  {{ lSelected!=-1?layers[ lSelected ]['domType']:'- -' }} @ {{ lSelected!=-1?layers[ lSelected ]['domSrcOver']:'- -' }} 
+</pre>
                             
                 </div>
 
@@ -424,7 +456,8 @@
                                                 layer.divName == divSelectedName &&
                                                 propertiesSelected.indexOf( f.name ) != -1 ?'nstFrameCssBlockCellSelected ':'')
                                             "
-                                        @click="setFrameNo( index ); makeSelectedNode_ByName( layer.divName, [f.name] ); nstTimeSlideInput_focus();"
+                                        @click="onStop(); setFrameNo( index ); makeSelectedNode_ByName( layer.divName, [f.name] ); nstTimeSlideInput_focus();"
+                                        @dblclick="showProperties=true"
                                         >
                                         <small 
                                             class="nstCell">
@@ -620,6 +653,10 @@ export default{
 
         return {
             nstLibO: nstl,
+
+            doAnimations: true,
+
+
             metadata: {
                 fps: fps,
                 framesTotal: framesTotal,
@@ -858,23 +895,28 @@ export default{
                     'wtarget': (w - rMargin) / ( framesTotal - 1),
                     'wstart': this.UIkeyCellWidth,
                     'w':0  };
-                let upDateFunc = () =>{
-                    //console.log('nstTL_w compute animation START',tmpO);
-                    ajsanimate( tmpO, {
-                        autoplay:true,
-                        duration:500,
-                        ease: 'outSine',
-                        fps: 30,
-                        'w': [tmpO.wstart, tmpO.wtarget],
-                        onUpdate:()=>{
-                            //console.log('nstTL_w compute animation ',tmpO.w);
-                            this.UIkeyCellWidth = tmpO.w;
-                        }
-                    });
-                };
-               mkTrashHold( 'nstTL_w_resize', upDateFunc, 550 );
+                if( this.doAnimations ){
+                    let upDateFunc = () =>{
+                        //console.log('nstTL_w compute animation START',tmpO);
+                        
+                        ajsanimate( tmpO, {
+                            autoplay:true,
+                            duration:500,
+                            ease: 'outSine',
+                            fps: 30,
+                            'w': [tmpO.wstart, tmpO.wtarget],
+                            onUpdate:()=>{
+                                //console.log('nstTL_w compute animation ',tmpO.w);
+                                this.UIkeyCellWidth = tmpO.w;
+                            }
+                        });
+                    };
+                    mkTrashHold( 'nstTL_w_resize', upDateFunc, 550 );
+                }else{
+                    this.UIkeyCellWidth = parseFloat(tmpO.wtarget);
+                }
             }
-            //console.log(`nstTL on cell [${this.UIkeyCellWidth}]`);
+            console.log(`nstTL on cell [${this.UIkeyCellWidth}]`);
         },
         onEmit_nstHistorySwap( data ){
             console.log('got history swap !',data);
@@ -1204,12 +1246,17 @@ export default{
 
         onStop(){
             console.log('onStop ');
-            clearInterval(this.iterator);
-            this.iterator = -1;
-            this.metadata.timeLine.pause();
+            if( this.iterator != -1 ){
+                clearInterval(this.iterator);
+                this.iterator = -1;
+            }
+            
+            if( this.metadata.timeLine != -1 ){
+                this.metadata.timeLine.pause();
+                let fMs = parseInt( this.metadata.timeLine._currentTime / this.frameMs);
+                this.setFrameNo( fMs );
+            }
             this.isPlaying = false;
-            let fMs = parseInt( this.metadata.timeLine._currentTime / this.frameMs);
-            this.setFrameNo( fMs );
         },
 
         playSelectionMarker( markerId ){
@@ -1492,7 +1539,7 @@ export default{
             for(let di of toDel ){
                 layer.kFrames.splice( di, 1 );
             }
-            this.makeSelectedNode_ByName 
+            //this.makeSelectedNode_ByName 
             this.$refs.nstHistoryO.saveStase('remove-property_by-name'+JSON.stringify([nodeName,properties]));
         },
 
@@ -1501,23 +1548,32 @@ export default{
 
             console.log(' make selected node by name :',nName, '\nprops:',properties,'\nevent: ',event);
             
+            console.log('nstTL - click event',event);
             if( event != undefined ){
                 let pointC = [event.clientX, event.clientY];
                 let divOnC = $($('#nstTLTable'+nName.substring(1))[0]);
                 let divSize = [ divOnC.width(), divOnC.height() ];
                 let seekN = mMapVal( pointC[0], 0, divSize[0], 0,1 );
                 let tFrame = parseInt( this.framesTotal * seekN );
-                if(0)console.log('event seek to ?',
+                if(1)console.log('event seek to ?',
                         '\n divSize:', divSize,
                         '\n seekN:',seekN,
                         '\n newFrame: ',tFrame
-                    );
-
- 
-                this.setFrameNo( tFrame );
-                
+                    );                 
+                    
             }
             
+            //this.showProperties = true;
+            
+            if( this.doAnimations )
+                this.animatePropertySelected( properties, nName );
+            
+            this.divFindName = nName.substring(1);
+            this.onDivFindName( properties );
+
+        },
+
+        animatePropertySelected( properties, nName ){
             setTimeout(()=>{
                 console.log('grid stager start ', properties);
                 
@@ -1528,6 +1584,7 @@ export default{
                     let chil = obR.children;
                     if( chil.length == 0 ) return -1;
                     let grid = [ chil.length, 0 ];
+
                     ajsanimate( chil, {
                         scale: [
                             { to: [1.0, ajsstagger([1.2,0.5], {
@@ -1549,22 +1606,8 @@ export default{
                     });
 
                 }
-                /*
-                ajsanimate(chil,{
-                    scale: [ 
-                        { to: ajsstagger('-.01', { grid, from, axis: 'x' }) },
-                        { to: 1.0, ease: 'inOutQuad', }
-                    ],
-                    delay: ajsstagger( 10, { grid, from }), 
-                    duration: 200 ,
-                    onUpdate: (e)=>{
-                        console.log('grid ....');
-                    }
-                });*/
-            },50);
             
-            this.divFindName = nName.substring(1);
-            this.onDivFindName( properties );
+            },50);
 
         },
 

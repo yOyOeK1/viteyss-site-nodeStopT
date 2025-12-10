@@ -3,15 +3,6 @@
     nstAnimSelector of <b>({{ divSelectedName }}) </b> mode:({{ asMode }})
     -->
 
-    <div>
-        selNow: 
-        <div v-for="o in nstTreeNodesSelected"
-            style="display: inline-block;">
-            < {{o.tagName.toLowerCase()}} #{{ o.getAttribute('id') }} />
-        </div>
-    </div>
-
-
     <div class="debBorders" v-if="asMode == 'edit'">
 
 
@@ -148,30 +139,35 @@
 import { toRaw,ref } from 'vue';
 import NstEases from './nstEases.vue';
 
-
+function defWantState(){
+    return {
+        type: -1,
+        duration: -1,
+        delay: -1,
+        loop: -1,
+        ease: -1
+    };
+}
 
 export default{
     components:{
         "NstEases": NstEases
     },
     emits: ['nst-animation-change'],
-    props:[ 
-        'asMode', 
-        'selected', 'nstTreePathSelected', 'nstTreeNodesSelected',
-        'layerSelected', 'divSelectedName' 
-    ],
+    props:{
+        'asMode':{ type: String, default: '' }, 
+        'selected':{ type: Object, default: defWantState()  },
+        'nstTreePathSelected':{ type: Array, default: [] },
+        'nstTreeNodesSelected':{ type: Array, default: [] },
+        //'layerSelected':{type: String, default: ''}, 
+        'divSelectedName':{type: String, default: ''} 
+    },
     data(){    
         return {
             mIsMounted: false,
             
             //selectedType:null,
-            wantState:{
-                type: -1,
-                duration: -1,
-                delay: -1,
-                loop: -1,
-                ease: -1
-            },
+            wantState:defWantState(),
 
             //typesOfAnimation: ref([]),//[ 'set', 'animate', "others"],
             

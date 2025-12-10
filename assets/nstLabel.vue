@@ -8,9 +8,6 @@
             @change="$emit( 'nst-label-set',{label:isLabel} )"/>
         
     </div>
-    <small>
-        Current frame: {{frameNo}} @ {{frameNo*metadata.frameMs}} ms.
-    </small>
     
 </template>
 
