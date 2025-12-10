@@ -31,8 +31,10 @@
             min="0"
             :max="framesTotal-1"
             step="1"
-            v-model="frameNo"></input>
+            v-model="frameNo"
+            @change="setFrameNo"></input>
     </div>
+    
        
     <div
         class="nstTimeLine">
@@ -43,8 +45,8 @@
 
         <div class="nstBox1">
             <div class="nstControlsBar">
-                <button @click="frameNo = 0; nstTimeSlideInput_focus();" title="|< to start"><i class="fa-solid fa-backward-step"></i></button>
-                <button @click="frameNo--;nstTimeSlideInput_focus();"title="< one left"><i class="fa-solid fa-backward"></i></button>
+                <button @click="setFrameNo( 0 ); nstTimeSlideInput_focus();" title="|< to start"><i class="fa-solid fa-backward-step"></i></button>
+                <button @click="setFrameNo( frameNo-1 );nstTimeSlideInput_focus();"title="< one left"><i class="fa-solid fa-backward"></i></button>
                 <button v-if="isPlaying"
                     @click="onStop();nstTimeSlideInput_focus();" title="Stop"><i class="fa-solid fa-pause"></i></button>
                 <button v-else
@@ -57,8 +59,8 @@
                 </select>
 
 
-                <button @click="frameNo++;nstTimeSlideInput_focus();"title="> one right"><i class="fa-solid fa-forward"></i></button>
-                <button @click="frameNo = framesTotal;nstTimeSlideInput_focus();" title=">| to end"><i class="fa-solid fa-forward-step"></i></button>
+                <button @click="setFrameNo( frameNo+1 );nstTimeSlideInput_focus();"title="> one right"><i class="fa-solid fa-forward"></i></button>
+                <button @click="setFrameNo( framesTotal );nstTimeSlideInput_focus();" title=">| to end"><i class="fa-solid fa-forward-step"></i></button>
             </div>
 
             <div class="nstDebugBar">
@@ -421,7 +423,7 @@
                                                 layer.divName == divSelectedName &&
                                                 propertiesSelected.indexOf( f.name ) != -1 ?'nstFrameCssBlockCellSelected ':'')
                                             "
-                                        @click="frameNo=index; makeSelectedNode_ByName( layer.divName, [f.name] ); nstTimeSlideInput_focus();"
+                                        @click="setFrameNo( index ); makeSelectedNode_ByName( layer.divName, [f.name] ); nstTimeSlideInput_focus();"
                                         >
                                         <small >
                                             {{ value }}                                            
@@ -769,6 +771,9 @@ export default{
         },
         replayTimeScale( nScale, oScale ){
             this.replayTimeScale = nScale;
+            if( this.metadata.timeLine != -1 ){
+                this.metadata.timeLine.speed = parseFloat(nScale);
+            }
             //this.timeLine.speed = nScale;
         },
         nstTreePathSelected( nSel, oSel ){
@@ -784,7 +789,7 @@ export default{
         },
 
         frameNo( nframe, oframe ){
-
+            return -1;
             if( nframe < 0 )
                 this.frameNo = 0;
             else if( nframe >= this.framesTotal )
@@ -793,7 +798,7 @@ export default{
              //   console.log('(watch2) nframe in range so ok ',this.frameNo);
 
 
-             let ms = this.msAtFrame( this.frameNo );
+            let ms = this.msAtFrame( this.frameNo );
 
             this.frameNoAtMs = ms;
             //this.frameNo = nframe;
@@ -847,7 +852,7 @@ export default{
                 metadata: this.metadata,
                 layers: toRaw (this.layers )
             } );
-            this.metadata.timeLine = lttlRes.timeLine;
+            this.setTimeLine( lttlRes.timeLine );
             
             $.toast('Undo - '+data.history.note);
 
@@ -883,6 +888,13 @@ export default{
                 this.setPropertiesOfNode_ById( o.getAttribute('id'), opts );  
         
         },
+
+        setTimeLine( timeLine ){
+            console.log( 'nstTL - set time line ....' );
+            this.metadata.timeLine = timeLine;
+            window['nstTlMata'] = timeLine;
+        },
+
         propertiesSelected_Set( props ){
             this.propertiesSelected = props;
         },
@@ -1046,7 +1058,7 @@ export default{
                 let TlRes = this.nstLibO.getTimeline_FromJsonData( fj );
                 this.layers = fj.layers;
 
-                this.metadata.timeLine = TlRes.timeLine;
+                this.setTimeLine( TlRes.timeLine );
                 //this.lSelected = -1;
                 //this.frameNo = 0;
                 console.log(' on load to lacal.....',TlRes);
@@ -1084,46 +1096,84 @@ export default{
           
         },
 
+
+        setFrameNo( e ){
+            console.log('nstTl setFrameNo [',e,'] type ['+(typeof e)+']');
+            let fNo = 0;
+            if( typeof e != 'number' ){
+                fNo = parseInt( e.target.value );                
+            }else fNo = e;
+
+            if( fNo < 0 ) fNo = 0;
+            else if( fNo > this.framesTotal ) fNo = this.framesTotal;
+            
+            this.frameNo = fNo;
+            let fMs = fNo * this.frameMs;
+            this.frameNoAtMs = parseInt(fMs);
+            let tl = this.metadata.timeLine;
+            if( tl == -1 ) return -1;
+            //console.log('nstTl - setFrameNo / seek: frameNo: ',fNo,' ('+fMs+') ms.');
+            //this.metadata.timeLine.seek( fMs+1, true );
+            tl.reset();
+            //tl.currentTime = fMs; 
+            tl.seek( fMs, true );
+            //this.metadata.timeLine.seek( fMs );
+        },
+
         onPlay(){
+            if( this.metadata.timeLine == -1 ) return -1;
+
+            if( this.frameNo == this.framesTotal-1 ){
+                this.metadata.timeLine.restart();    
+            }
+
             this.isPlaying = true;
-
-
-
-            // if last one play from start
-            if( this.frameNo == this.framesTotal-1 )
-            this.frameNo = 0;
-
-            //this.timeLine.resume();
+            this.metadata.timeLine.play();
 
             this.onPlayIter();
             //this.timeLine.play();
         },
         onPlayIter(){
             if( this.isPlaying == true ){
-                this.iterator = setTimeout(()=>{
-                    //console.log('1 on play iter ...',this.frameNo);
-                    if( this.frameNo < this.framesTotal-1 )
-                        this.frameNo++;
-                    else
-                        this.frameNo = 0;
+                let tl = this.metadata.timeLine
 
-                    //console.log('2 on play iter ...',this.frameNo);
-                    if( this.frameNo == this.framesTotal-1 && this.playInLoop == false ){
-                        this.onStop();
-                    }else{
+                if( this.iterator != -1 ){
+                    clearInterval(this.iterator);                    
+                }
+
+                this.iterator = setTimeout(()=>{
+
+                    this.frameNo = parseInt( 
+                        (tl._currentTime) / this.frameMs
+                        );
+                    this.frameNoAtMs = tl.currentTime;
+                        
+                    if( this.isPlaying == true ){
                         this.onPlayIter();
                     }
+                    if( tl.paused == true ){
+                        //this.onStop();
+                        if( this.playInLoop ){
+                            tl.restart();
+                        }else{
+                            this.onStop();
+                        }
+                    }
+
                 }, this.frameMs / this.replayTimeScale );
             }else{
                 console.error('ee on play iter will not play global wrong ');
             }
         },
 
-
         onStop(){
-            this.isPlaying = false;
-            //this.timeLine.pause()
+            console.log('onStop ');
             clearInterval(this.iterator);
+            this.iterator = -1;
+            this.metadata.timeLine.pause();
+            this.isPlaying = false;
+            let fMs = parseInt( this.metadata.timeLine._currentTime / this.frameMs);
+            this.setFrameNo( fMs );
         },
 
         playSelectionMarker( markerId ){
@@ -1613,15 +1663,21 @@ export default{
                     if( labId == -1 ) return -1;
                     this.layers[ this.lSelected ]['kFrames'][ labId ]['keys'][ this.frameNo ] = `${this.labelSelected}`;
 
+                    this.rebuildTimeLimeMain();
+
+
                 }else if( this.propertiesSelected == 'actions' ){
                     let actId = this.layers[ this.lSelected ]['kFrames'].findIndex( k=> k.name == 'actions' );
                     if( actId == -1 ) return -1;
                     this.layers[ this.lSelected ]['kFrames'][ actId ]['keys'][ this.frameNo ] = 
                         JSON.parse( JSON.stringify( toRaw( this.actionsSelected ) ) );
+                    
+                    this.rebuildTimeLimeMain();
 
                 }
 
                 return 1;
+
             }
 
 
@@ -1709,29 +1765,29 @@ export default{
                 }
             }
 
+            this.rebuildTimeLimeMain();
 
+        },
+
+        rebuildTimeLimeMain(){
 
             let lttlRes = this.nstLibO.getTimeline_FromJsonData( {
                 metadata: this.metadata,
                 layers: toRaw (this.layers )
             } );
 
-            //let lttlRes = layers_to_timeLine( toRaw(this.layers), {
-            //    fps: this.fps, framesTotal: this.framesTotal,
-            //    frameMs: this.frameMs
-            //} );
-            //debugger
             console.log('timeline rebuild result\n---------------------------------\n',
                 lttlRes);
-            this.metadata.timeLine = lttlRes.timeLine;
-            window['tl1'] = lttlRes.timeLine;
+                
+            this.setTimeLine(  lttlRes.timeLine );
 
-            //this.playSelectionMarker( divName );
-
+            
             this.$refs.nstHistoryO.saveStase('on-add-key-frame');
 
             return 1;
-        }
+        },
+
+        
 
     }
 

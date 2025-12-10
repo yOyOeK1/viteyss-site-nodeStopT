@@ -135,6 +135,7 @@ export default{
             this.isStop = 'stop' in action;
             this.isPlay = 'play' in action;
             this.isGOTO = action.goto;
+            this.isGOTOValue = action.gotov;
             this.isSpeed = action.speed;
             this.isSpeedValue  = action.speedv;
             this.isFPS = action.fps;
@@ -161,8 +162,11 @@ export default{
         },
         onChange(){
             if( this.isMounted == false ) return 1;
-            
-            let gotov = toRaw( this.isGOTOValue );
+            let gotovStr = `${toRaw( this.isGOTOValue )}`;
+            let gotovInt = parseInt( gotovStr );
+            console.log('gotov int is type of ',(typeof gotovInt),
+                `\n and [${gotovInt}] `);
+            let gotov = `${gotovInt}` == 'NaN' ? gotovStr : gotovInt;
             let speedv = parseFloat( toRaw( this.isSpeedValue ) );
             let fpsv = parseInt( toRaw( this.isFPSValue ) );
             let funcv = toRaw( this.isFuncionValue );            

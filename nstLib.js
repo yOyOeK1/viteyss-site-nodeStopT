@@ -28,6 +28,8 @@ class nstLib{
             //    console.log('R/tik @ ',self._currentTime+' ms.');
            //}
         });
+        tl.call( ()=>console.log('ntsTlMain start'), 0 );
+        tl.call( ()=>console.log('ntsTlMain end'), metadata.framesTotalMs );
         //tl.fps = metadata.fps;
         //tl.duration = metadata.framesTotalMs;
 
@@ -63,7 +65,7 @@ class nstLib{
 
                             }else if( propName == 'actions' ){
 
-                                let ff = nstConvert.parseActionSettings( propVal );
+                                let ff = nstConvert.parseActionSettings( propVal, metadata );
                                 let tlR = tl;
                                 let callIt = () => {
                                     for( let tfk of Object.keys( ff ) ){
@@ -454,11 +456,23 @@ var nstConvert = {
         }
     },
 
-    'parseActionSettings': ( action ) => {
+    'parseActionSettings': ( action, metadata ) => {
         let tr = {};
         if( 'stop' in action && action.stop ) tr['1_stop'] = function ( tl ){ tl.pause(); };
         if( 'play' in action && action.play ) tr['2_play'] =  function ( tl ){ tl.play(); };
-        if( 'gotov' in action && action.goto  ) tr['3_goto'] = function( tl ){ tl.seek( action.gotov ); };
+        if( 'gotov' in action && action.goto  ) tr['3_goto'] = ( tl )=>{ 
+            //tl.onUpdate = m=>{ console.log('in goto ['+action.gotov+'] ',m); };
+            tl.pause();
+            //tl.seek( action.gotov, true );
+            setTimeout(()=>{
+                tl.reset();
+                console.log('tl seek id :',tl.id);                
+                tl.currentTime = action.gotov; 
+                tl.play();
+            },1);
+            
+            
+        };
         if( 'speedv' in action && action.speed ) tr['4_speed'] = function( tl ){tl.speed = action.speedv; };
         if( 'fpsv' in action && action.fps ) tr['5_fps'] = function( tl ){ tl.fps = action.fpsv; };
         if( 'funcv' in action && action.func ) tr['6_func'] = function( tl ){
