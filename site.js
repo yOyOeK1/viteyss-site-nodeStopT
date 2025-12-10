@@ -8,7 +8,7 @@ import { nstConvert, nstLib } from './nstLib';
 import curInfNst from './MediaAssets/cursor_info_nst.json';
 
 
-/**  */
+/** to make nice throttling on not decided client :P  */
 function mkTrashHold( keyIdent, func, msTrash ){
   let t = Date.now();
   console.log(`mkTH spon \n\tkeyIdent[${keyIdent}], func, msTrash[${msTrash}]`);
