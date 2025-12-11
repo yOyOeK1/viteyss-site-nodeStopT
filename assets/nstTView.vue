@@ -1,17 +1,5 @@
 <style>
-.nstTVitemSelected{
-    /*outline: 2px solid rgb(84, 132, 88);
-    */background-color: rgb(186, 199, 139);
-    border-radius: 6px;
-    padding:2px;
-}
-.nstTVitemSelectedLast{
-    /*outline: 2px solid rgb(6, 85, 1);
-    */color: rgb(255, 255, 255);
-    background-color: rgb(11, 66, 1);
-    border-radius: 6px;
-    padding:2px;
-}
+
 
 
 .v-enter-active,

@@ -73,30 +73,33 @@
                 <button @click="onSaveToLocal()" title="Save node stop time file"><i class="fa-solid fa-floppy-disk"></i></button>
             </div>
 
-            <div class="nstDebugBar"
-                id="nstAnimationUiBar">
-                <input type="checkbox" 
-                    title="Animate Ui"
-                    v-model="doAnimations" 
-                    id="nstAniUi"
-                    style="display:none;" />
-                <button @click="doAnimations=!doAnimations">
-                   <i v-if="doAnimations" class="fa-solid fa-gauge"
-                        style="color:orange;"
-                        title="Disable animation of Ui"></i>
-                   <i v-else class="fa-solid fa-gauge-high"
-                        title="Enable animation of Ui"></i>
-                </button>
-                
-            </div>
-
+            
             
             <div v-if="true" class="nstDebugBar"
                 id="nstDebugTmpBar">
-                <button @click="test_setMulti()">sM</button> |
-                <button @click="test_setSingle()">sS</button> |
-                <button @click="onLoad_Start()">fL</button> |
+
+                <div style="display: inline-block;">
+
+                    <input type="checkbox" 
+                        title="Animate Ui"
+                        v-model="doAnimations" 
+                        id="nstAniUi"
+                        style="display:none;" />
+                    <button @click="doAnimations=!doAnimations">
+                    <i v-if="doAnimations" class="fa-solid fa-gauge"
+                            style="color:orange;"
+                            title="Disable animation of Ui"></i>
+                    <i v-else class="fa-solid fa-gauge-high"
+                            title="Enable animation of Ui"></i>
+                    </button>
+
+                </div>
+
+                <button @click="test_setMulti()">sM</button>
+                <button @click="test_setSingle()">sS</button>
+                <button @click="onLoad_Start()">fL</button>
                 <button @click="divFindName='dB'; onDivFindName([]);onAddKeyFrame()">q?</button>
+            
             </div>
 
 
@@ -127,6 +130,8 @@
                     id="nstBtImportAssetsOpenShow"
                     @click="onImportAssetsToCanvas()"
                     ><i class="fa-solid fa-file-import"></i></button>
+
+
 
                 <div 
                     v-if="showImportAssets"
@@ -167,13 +172,58 @@
                 </button>
 
 
-                #:
-                <input title="Look for div node $('#....')"
-                    :placeholder=" elSelectedStr "
-                    type="text" v-model="divFindName"
-                    style="width:125px"
-                    @change="onDivFindName([])"
-                    >
+
+                <div style="display: inline-block;width:130px; font-size:75%;
+                        background-color: rgb(116, 157, 70); 
+                        box-shadow: rgb(50, 50, 50) 0px 3px 8px 0px inset;
+                        border-radius: 10px;
+                        border:#e1cbaf solid 2px;
+                        padding:4px 4px;margin:0px;
+                        overflow-y: auto; height: 30px;
+                        "
+                    v-if="nstTreeNodesSelected.length > 0">
+                    
+                    <div style="display: inline;
+                        background-color: goldenrod;">                   
+
+                        <div v-for="o in nstTreeNodesSelected" 
+                            style="
+                            display: inline; padding: 1px 1px;
+                           
+                            "
+                            class="nstTVitemSelectedLast" >
+                            <NstTItemNode 
+                                :mode="'tiny'"
+                                :name="o.tagName"
+                                :aId="o.getAttribute('id')"
+                                />
+                        </div>
+
+                    </div>
+
+                    
+                </div>
+
+                <div style="display: inline;"
+                    v-if="nstTreeNodesSelected.length > 0">
+                    <button @click="unSelectElement();nstTreePathSelected=[]" 
+                        title="Clear selection to None">
+                        <i class="fa-regular fa-circle-xmark"></i>
+                    </button>
+                </div>
+
+                <div v-if="nstTreeNodesSelected.length == 0" style="display: inline-block;">
+
+                    #:
+                    <input title="Look for div node $('#....')"
+                        :placeholder=" elSelectedStr "
+                        type="text" v-model="divFindName"
+                        style="width:125px"
+                        @change="onDivFindName([])"
+                        >
+
+                </div>
+                
                 
 
 
@@ -272,7 +322,8 @@
                         <hr>
 <pre style="font-size: 75%;">
  Current frame:   .....  {{frameNo}} @ {{frameNo*metadata.frameMs}} ms.
- Multi selection:  ....  [ <div v-for="o in nstTreeNodesSelected" style="display: inline-block;" >< {{o.tagName.toLowerCase()}} #{{ o.getAttribute('id') }} /> </div> ]
+ Multi selection:  ....  
+ [ <div v-for="o in nstTreeNodesSelected" style="display: inline-block;" >< {{o.tagName.toLowerCase()}} #{{ o.getAttribute('id') }} /> </div> ]
  Properties selected: .  [ {{ `${propertiesSelected}` }} ]
  Properties @:    .....  {{ 1 }} //TODO
  Dom info. :    .......  {{ lSelected!=-1?layers[ lSelected ]['domType']:'- -' }} @ {{ lSelected!=-1?layers[ lSelected ]['domSrcOver']:'- -' }} 
@@ -825,6 +876,11 @@ export default{
                 if( o != -1 ) tr.push( o );
             }
             this.nstTreeNodesSelected = tr;
+
+            if( tr.length == 0 ){
+                this.unSelectElement();
+            }
+
         },
 
         /*
@@ -2065,5 +2121,24 @@ export default{
     background-color: rgba(248, 29, 87, 0.1);
     
 }
+
+
+
+
+.nstTVitemSelected{
+    /*outline: 2px solid rgb(84, 132, 88);
+    */
+    background-color: rgb(186, 199, 139);
+    border-radius: 6px;
+    padding:2px;
+}
+.nstTVitemSelectedLast{
+    /*outline: 2px solid rgb(6, 85, 1);
+    */color: rgb(255, 255, 255);
+    background-color: rgb(11, 66, 1);
+    border-radius: 6px;
+    padding:2px;
+}
+
 
 </style>
