@@ -97,7 +97,7 @@
 
                 <button @click="test_setMulti()">sM</button>
                 <button @click="test_setSingle()">sS</button>
-                <button @click="onLoad_Start()">fL</button>
+                <button @click="test_loadFileOnStart()">fL</button>
                 <button @click="divFindName='dB'; onDivFindName([]);onAddKeyFrame()">q?</button>
             
             </div>
@@ -310,13 +310,44 @@
 
 
                     <hr></hr>
+
+
+                    <button
+                        :disabled="lSelected == -1"
+                        title="Remove this key frame"
+                        @click="onRemoveKeyFrame();"
+                        >
+                        <i class="fa-regular fa-trash-can" />
+                    </button>
+                    <button
+                        :disabled=" lSelected == -1 "
+                        title="Copy this key frame"
+                        @click="onCopyThisKeyFrame();"
+                        >
+                        <i class="fa-regular fa-copy" />
+                    </button>
+
+                    
+                    &nbsp;
+                    &nbsp;
+
+
+
                     <input type="checkbox" v-model="closePropertiesAfterAdding"
-                        title="Close this dialog after adding ..." />
+                        title="Close this dialog after adding ..." /> 
+                    
+                    &nbsp;
+                    
                     <button
                         id="nstInsertKeyFrameNodeFastBt"
                         title="Insert key frame (+)"
                         @click="onAddKeyFrame();( closePropertiesAfterAdding ? showProperties=false : '' )"
-                        ><i class="fa-solid fa-plus"></i>Add</button>
+                        >
+                        <i class="fa-solid fa-plus"></i>Add
+                    </button>
+
+
+                    
                     
                         
                         <hr>
@@ -491,7 +522,7 @@
                                     <NstPropertyRow :propertyTimeline="f"></NstPropertyRow>
                                 -->
 
-                                <!-- old -->
+                                <!-- old tlcell -->
                                 <div style=""
                                     :id="'XXnst'+layer.divName.substring(2)+'_'+f.name"
                                     >
@@ -507,7 +538,7 @@
                                                 layer.divName == divSelectedName &&
                                                 propertiesSelected.indexOf( f.name ) != -1 ?'nstFrameCssBlockCellSelected ':'')
                                             "
-                                        @click="onStop(); setFrameNo( index ); makeSelectedNode_ByName( layer.divName, [f.name] ); nstTimeSlideInput_focus();"
+                                        @click="onStop();setFrameNo( index ); makeSelectedNode_ByName( layer.divName, [f.name] );nstTimeSlideInput_focus();"
                                         @dblclick="showProperties=true"
                                         >
                                         <small 
@@ -601,6 +632,7 @@ import NstTItemNode from './nstTItemNode.vue';
 
 import NstAction from './nstAction.vue';
 import NstLabel from './nstLabel.vue';
+
 //import NstEases from './nstEases.vue';
 //import NstiFs from './nstiFs.vue';
 //import nstProperty from './nstProperty.vue';
@@ -622,6 +654,7 @@ export default{
         "NstTItemNode": NstTItemNode,
         "NstLabel": NstLabel, 
         "NstAction": NstAction,
+        //"NstTLCell": NstTimeLineCell,
         //"NstiFileSystem": NstiFs,
     },
     mounted(){
@@ -680,8 +713,8 @@ export default{
             this.onDivFindName(-8);
             this.nstTreePathSelected = [ [ 47, 1, 1, 0, 1 ], [ 47, 1, 1, 0, 0 ] ];
             this.showProperties = false;
-
             this.onWindowResize( window.innerWidth, window.innerHeight);
+            this.test_loadFileOnStart(); // load test file
 
         },500);
 
@@ -794,7 +827,7 @@ export default{
     computed:{
         divSelectedName(){
             console.log('divSelectedName -> select ('+this.lSelected+') layers',this.layers);
-            if( this.lSelected == -1 ) return 'NaN';
+            if( this.lSelected == -1 || this.layers.length == 0 ) return 'NaN';
             else if( 'divName' in this.layers[ this.lSelected ] ){
                 return this.layers[ this.lSelected ]['divName'];
             } else {
@@ -927,6 +960,19 @@ export default{
             this.divFindName = 'dA';            
             this.onDivFindName(['top']);
             this.nstTreePathSelected = [ [ 47, 1, 1, 0, 0 ] ];
+        },
+
+        /** so one liner iFs file load */
+        async test_loadFileOnStart( iFsPath = undefined ){
+            if( iFsPath == undefined ){
+                //'nst/nst_v3_1.ajs'
+                iFsPath = 'nst/tests/actionsGoTo_label.js';
+            }
+            //this.fileDialogOpen = true;
+            this.lSelected = -1;
+            let f = await iFs.readFile( iFsPath);
+            this.onLoadToLocalFromString( f );
+
         },
 
         getTagNameFrom_layer( layer ){
@@ -1152,11 +1198,7 @@ export default{
         },
 
 
-        onLoad_Start(){
-            this.fileDialogOpen = true;
-
-        },
-
+        
         onLoadToLocal(){
             let fd = null;
             let onLoadDone = ( msg ) => {
@@ -1169,10 +1211,12 @@ export default{
 
         },
 
+        /*
         async onLoadToLocal_old(){
             let f = await iFs.readFile('nst/nst_v3_1.ajs');
             this.onLoadToLocalFromString( f );
         },
+        */
         
         onLoadToLocalFromString( f ){
             
@@ -1830,14 +1874,65 @@ export default{
 
         },
 
-        
-        
+        mkNiceStr( o ){ return '\n\t-----START -------\n'+
+            JSON.stringify( toRaw( o ) , null, 4)+
+            '\n\t------END--------------'; },
+
+        doDebugDump(){
+            let tr = `\n\ndebug dump ---------------------------------\n
+                \n * paths tree selected: ${this.mkNiceStr( this.nstTreePathSelected )}\n
+                \n * objects tree: ${this.mkNiceStr( this.nstTreeNodesSelected) }\n
+                \n * lSelected : ${this.mkNiceStr( this.lSelected ) }\n
+                \n * propertiesSelected: ${this.mkNiceStr( this.propertiesSelected ) }\n`;
+
+            if( this.lSelected != -1 ){
+                tr+= `\n * divName: ${this.mkNiceStr( this.layers[ this.lSelected ]['divName'] ) }\n`;
+            }
+
+
+
+
+                /*
+                \n * : ${this.mkNiceStr( this.prope ) }\n
+                \n * : ${this.mkNiceStr( this. ) }\n
+                \n * : ${this.mkNiceStr( this. ) }\n
+            `;*/
+            return tr;
+        },
+
+        onRemoveKeyFrame(){
+            let fNo = parseInt( this.frameNo );
+            console.log('nstMulti- onRemoveKeyFrame  frameNo('+fNo+')',this.doDebugDump() );
+            let res = this.onRemoveKeyFrame_execute();
+            if( res == 0 )
+                $.toast(`Removed key frame ${res}`);
+            else if (res == -4 )
+                $.toast(`Nothing to remove. Key frame is empty.`);
+            else
+                $.toast(`Removing error: (${res})`);
+        },
+        onRemoveKeyFrame_execute(){
+            let fNo = parseInt( this.frameNo );
+            if( this.lSelected == -1 ) return -1;
+            if( this.propertiesSelected.length != 1) return -2;
+            let pName = `${this.propertiesSelected}`;
+            let layer = this.layers[ this.lSelected ];
+            let kInd = layer.kFrames.findIndex( p => p.name == pName );
+            if( kInd == -1 ) return -3;
+            if( layer.kFrames[ kInd ][ 'keys' ][ fNo ] == null ) return -4;
+            layer.kFrames[ kInd ][ 'keys' ][ fNo ] = null;
+            layer.kFrames[ kInd ][ 'lHelpers' ][ fNo ] = null;
+
+            this.rebuildTimeLimeMain();
+            this.makeSelectedNode_ByName( layer.divName, [ layer.kFrames[ kInd ]['name'] ] );
+            this.nstTimeSlideInput_focus();
+
+            return 0;
+        },
 
 
         onAddKeyFrame(){
-            console.log('nstMulti- onAddKeyFrame ',
-                '\n paths tree selected:',this.nstTreePathSelected,
-                '\n objects tree:',this.nstTreeNodesSelected);
+            console.log('nstMulti- onAddKeyFrame ',this.doDebugDump() );
 
 
             if( this.divFindName == '$Settings'){
