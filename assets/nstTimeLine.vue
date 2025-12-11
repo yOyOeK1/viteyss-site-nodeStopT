@@ -19,7 +19,72 @@
         layers: ({{layers.length}})
     </div>
 
-   
+    <!-- clipboard actions -->
+    <div style="position:absolute; left: 20px; top: 10px; ">
+    
+        <div class="nstFindBar"            
+            v-show="clipboardActions.length>0"            
+            style="
+                position: relative;
+                background-color: white;
+                "           
+            >
+
+            <div
+                v-if="!clipboardActionsShow"
+                style="
+                    position: absolute;
+                    left: 5px;top:-5px;
+                    background-color: rgb(214 255 213);
+                    "
+                @click="clipboardActionsShow=!clipboardActionsShow"
+                title="Clipboard - more informations"
+                >
+                ({{ clipboardActions.length }})
+
+            </div>
+
+
+            <div
+                v-if="clipboardActionsShow"
+                style="
+                position: absolute;
+                right: -5px;top: -10px;
+                    ">
+                <button
+                    title="Clear clipboard"
+                    @click="clipboardActions=[]"
+                    >
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+            </div>
+
+            <div style="
+                position: absolute;
+                left: -15px;top: -5px;
+                background-color: white;
+                border-radius: 8px;
+                "
+                @click="clipboardActionsShow=!clipboardActionsShow"
+                title="Clipboard - more informations"
+                >
+                <i class="fa-regular fa-clipboard"></i>
+            </div>
+
+            <div v-show="clipboardActionsShow && clipboardActions.length>0">
+                <div v-for="ci,ciI in clipboardActions">
+                    <a @click="clipboardActions.splice( ciI, 1 ) ">[x]</a> 
+                    {{ ci.divName }} / {{ ci.propName }} [ {{ ci.propVal }}]
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
 
     <div
         class="nstTimeLine"
@@ -322,7 +387,7 @@
                     <button
                         :disabled=" lSelected == -1 "
                         title="Copy this key frame"
-                        @click="onCopyThisKeyFrame();"
+                        @click="onCopyKeyFrame( )"
                         >
                         <i class="fa-regular fa-copy" />
                     </button>
@@ -807,6 +872,12 @@ export default{
             propertiesUpdateDelay:-1,
             observeAtId: null,
             observe: null,
+
+            clipboardActionsShow: false,
+            clipboardActions: [
+                { divName: 'div', propName: 'pro', propVal:11.5 }
+            ],
+
 
             lSelected:-1,
             layers: [],
@@ -1900,16 +1971,68 @@ export default{
             return tr;
         },
 
+        onCopyKeyFrame( ){
+            let fNo = parseInt( this.frameNo );
+            console.log('nstMulti- onCopyKeyFrame  frameNo('+fNo+')',this.doDebugDump() );
+            let res = this.onCopyKeyFrame_execute();
+            this.onExecuteToast( res );
+        },
+
+        onCopyKeyFrame_execute(){
+            let fNo = parseInt( this.frameNo );
+            if( this.lSelected == -1 ) return -1;
+            //if( this.propertiesSelected.length != 1) return -2;
+            //let pNames = `${this.propertiesSelected}`;
+            let layer = this.layers[ this.lSelected ];
+            for( let pName of this.propertiesSelected ){
+                let kInd = layer.kFrames.findIndex( p => p.name == pName );
+                if( kInd == -1 ) return -3;
+
+                let cItem = { 
+                    'divName': `${layer.divName}`, 
+                    'propName': pName, 
+                    'propVal': toRaw( layer.kFrames[ kInd ][ 'keys' ][ fNo ] )
+                };
+                let isTest = this.clipboardActions.findIndex( ci => ci.divName == cItem.divName && ci.propName == cItem.propName );
+                if( isTest == -1 ){
+                    this.clipboardActions.push( cItem ); 
+                    console.log('nstTl cb add ',cItem); 
+                }else{
+                    this.clipboardActions[ isTest ]['propVal'] = cItem.propVal; 
+                    console.log('nstTl cb update ',cItem); 
+                }                 
+                    //layer.kFrames[ kInd ][ 'lHelpers' ][ fNo ]
+            }            
+            return -20;
+        },
+
+
+        onExecuteToast( res ){
+            if( res == 0 )
+                $.toast(`Removed key frame ${res}`);
+            else if (res == -20 )
+                $.toast(`Added to clipboard<br>Actions ...`);
+            else if (res == -1 )
+                $.toast(`EE Nothing selected for action.`);
+            else if (res == -2 )
+                $.toast(`EE wrong properties selection count.`);
+            else if (res == -4 )
+                $.toast(`EE Nothing to remove. Key frame is empty.`);
+            else if (res == -3 )
+                $.toast(`EE no kFrame name definition`);
+            else if (res == -8 )
+                $.toast(`Skip is all ready...`);
+
+            else
+                $.toast(`Removing error: (${res})`);
+        },
+
+
         onRemoveKeyFrame(){
             let fNo = parseInt( this.frameNo );
             console.log('nstMulti- onRemoveKeyFrame  frameNo('+fNo+')',this.doDebugDump() );
             let res = this.onRemoveKeyFrame_execute();
-            if( res == 0 )
-                $.toast(`Removed key frame ${res}`);
-            else if (res == -4 )
-                $.toast(`Nothing to remove. Key frame is empty.`);
-            else
-                $.toast(`Removing error: (${res})`);
+            this.onExecuteToast( res );
         },
         onRemoveKeyFrame_execute(){
             let fNo = parseInt( this.frameNo );
