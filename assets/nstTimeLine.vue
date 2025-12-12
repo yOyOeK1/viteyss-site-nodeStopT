@@ -137,105 +137,115 @@
                 
                 </div>
 
-                <div 
-                    v-show="fileToolsShow"
-                    id="nstToolsBlock"
-                    style="
-                        border:solid darkolivegreen 4px;
-                        border-radius: 15px;
-                        background-color: rgb(111,66,103);
-                        color:white;
-                        position: absolute;
-                        margin-top:10px;
-                        z-index:20;
-                        padding:10px;
-                        min-width:200px;
-                        max-height:66vh;
-                        top: -8px;
-                        overflow-y: auto;
-                        box-shadow: rgb(50, 50, 50) 5px 8px 15px;
+
+                <Transition>
+
+                    <div 
+                        v-show="fileToolsShow"
+                        id="nstToolsBlock"
+                        style="
+                            border:solid darkolivegreen 4px;
+                            border-radius: 15px;
+                            background-color: rgb(111,66,103);
+                            color:white;
+                            position: absolute;
+                            margin-top:10px;
+                            z-index:20;
+                            padding:10px;
+                            min-width:200px;
+                            max-height:66vh;
+                            top: -8px;
+                            overflow-y: auto;
+                            box-shadow: rgb(50, 50, 50) 5px 8px 15px;
+                            
+
+                        "
+                        >
+
+
+                        
+                        <!-- debug section -->
+                        <div><b>Debug:</b></div>
+                        <div v-if="true"
+                            id="nstDebugTmpBar">               
+
+                            <button @click="test_setMulti()">sM</button>
+                            <button @click="test_setSingle()">sS</button>
+                            <button @click="test_loadFileOnStart()">fL</button>
+                            <button @click="divFindName='dB'; onDivFindName([]);onAddKeyFrame()">q?</button>
+                        
+                        </div>
+                       
+
+
+                        <br>
+                        <!-- files aks load / save animation -->
+                        <div><b>File:</b></div>
+                        <div
+                            id="nstLoadSaveBar">
+                            <button @click="onLoadToLocal()" title="Load node stop time file or json"><i class="fa-solid fa-upload"></i>Open file ...</button><br>
+                            <button @click="onSaveToLocal()" title="Save node stop time file"><i class="fa-solid fa-floppy-disk"></i>Save file as ...</button>
+                        </div>
+
+
+                        <br>
+                        <!-- undo / -->
+                        <div><b>Edit:</b></div>
+                        <div>
+                            <div
+                                id="nstHistoryBar">
+                                <NstHistory 
+                                    ref="nstHistoryO"
+                                    :layers="layers"
+                                    :metadata="metadata"
+                                    :lSelected="lSelected"
+                                    :divFindName="divFindName"
+                                    :nstTreePathSelected="nstTreePathSelected"
+                                    @nst-history-swap="onEmit_nstHistorySwap"
+                                    />
+                            </div>
+
+                        </div>
+
+                        <br>
+                        <hr>
+                        
+                        <br>
+                        <div><b>Settings: </b></div>
+                        <!-- ui animation -->
+                        <div
+                                id="nstUiAnimationBar">
+                            <div style="display: inline-block;">
+
+                                <input type="checkbox" 
+                                    title="Animate Ui"
+                                    v-model="doAnimations" 
+                                    id="nstAniUi"
+                                    style="display:none;" />
+                                <button @click="doAnimations=!doAnimations">
+                                    <span v-if="doAnimations">
+                                        <i class="fa-solid fa-gauge"
+                                            style="color:orange;"
+                                            title="Disable animation of Ui"></i>
+                                        Ui animating
+                                    </span>
+                                    <span v-else >
+                                        <i class="fa-solid fa-gauge-high"
+                                                title="Enable animation of Ui"></i>
+                                        Ui instant
+                                    </span>
+                                </button>
+
+                            </div>
+                        </div>
+
+
                         
 
-                    "
-                    >
-
-                    <div>
-
-                        <h4>
-                            File / tools / ...
-                        </h4>
 
                     </div>
 
-                    <!-- files aks load / save animation -->
-                    <div class="nstDebugBar"
-                        id="nstLoadSaveBar">
-                        <button @click="onLoadToLocal()" title="Load node stop time file or json"><i class="fa-solid fa-upload"></i>Open file ...</button><br>
-                        <button @click="onSaveToLocal()" title="Save node stop time file"><i class="fa-solid fa-floppy-disk"></i>Save file as ...</button>
-                    </div>
-
-
-                    <!-- undo / -->
-                    <div>
-                        <div class="nstHistoryBar"
-                            id="nstHistoryBar">
-                            <NstHistory 
-                                ref="nstHistoryO"
-                                :layers="layers"
-                                :metadata="metadata"
-                                :lSelected="lSelected"
-                                :divFindName="divFindName"
-                                :nstTreePathSelected="nstTreePathSelected"
-                                @nst-history-swap="onEmit_nstHistorySwap"
-                                />
-                        </div>
-
-                    </div>
-
-
-                    <!-- ui animation -->
-                    <div class="nstHistoryBar"
-                            id="nstUiAnimationBar">
-                        <div style="display: inline-block;">
-
-                            <input type="checkbox" 
-                                title="Animate Ui"
-                                v-model="doAnimations" 
-                                id="nstAniUi"
-                                style="display:none;" />
-                            <button @click="doAnimations=!doAnimations">
-                                <span v-if="doAnimations">
-                                    <i class="fa-solid fa-gauge"
-                                        style="color:orange;"
-                                        title="Disable animation of Ui"></i>
-                                    Ui animating
-                                </span>
-                                <span v-else >
-                                    <i class="fa-solid fa-gauge-high"
-                                            title="Enable animation of Ui"></i>
-                                    Ui instant
-                                </span>
-                            </button>
-
-                        </div>
-                    </div>
-
-
-                    <hr>
-                    <!-- debug section -->
-                    <div v-if="true" class="nstDebugBar"
-                        id="nstDebugTmpBar">               
-
-                        <button @click="test_setMulti()">sM</button>
-                        <button @click="test_setSingle()">sS</button>
-                        <button @click="test_loadFileOnStart()">fL</button>
-                        <button @click="divFindName='dB'; onDivFindName([]);onAddKeyFrame()">q?</button>
-                    
-                    </div>
-
-
-
-                </div>
+                </Transition>
 
             </div>
 
@@ -2537,6 +2547,7 @@ export default{
     border-radius: 6px;
     padding:2px;
 }
+
 
 
 </style>
