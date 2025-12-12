@@ -49,7 +49,7 @@
                 v-if="clipboardActionsShow"
                 style="
                 position: absolute;
-                right: -5px;top: -10px;
+                right: -35px;top: -10px;
                     ">
                 <button
                     title="Clear clipboard"
@@ -75,7 +75,7 @@
             <div v-show="clipboardActionsShow && clipboardActions.length>0">
                 <div v-for="ci,ciI in clipboardActions">
                     <a @click="clipboardActions.splice( ciI, 1 ) ">[x]</a> 
-                    {{ ci.divName }} / {{ ci.propName }} [ {{ ci.propVal }}]
+                    {{ ci.divName }} / {{ ci.propName }} key:[ {{ ci.key }}] help: [{{ci.lHelper}}]
                 </div>
 
             </div>
@@ -378,18 +378,25 @@
 
 
                     <button
-                        :disabled="lSelected == -1"
+                        :disabled="!cb_canRemove"
                         title="Remove this key frame"
                         @click="onRemoveKeyFrame();"
                         >
                         <i class="fa-regular fa-trash-can" />
                     </button>
                     <button
-                        :disabled=" lSelected == -1 "
+                        :disabled="!cb_canCopy"
                         title="Copy this key frame"
                         @click="onCopyKeyFrame( )"
                         >
                         <i class="fa-regular fa-copy" />
+                    </button>
+                    <button
+                        :disabled="!cb_canPast"
+                        title="Paste to this frame"
+                        @click="onPasteKeyFrame( )"
+                        >
+                        <i class="fa-regular fa-paste"></i>
                     </button>
 
                     
@@ -603,7 +610,7 @@
                                                 layer.divName == divSelectedName &&
                                                 propertiesSelected.indexOf( f.name ) != -1 ?'nstFrameCssBlockCellSelected ':'')
                                             "
-                                        @click="onStop();setFrameNo( index ); makeSelectedNode_ByName( layer.divName, [f.name] );nstTimeSlideInput_focus();"
+                                        @click="onStop();setFrameNo( index ); makeSelectedNode_ByName( layer.divName, [f.name] );"
                                         @dblclick="showProperties=true"
                                         >
                                         <small 
@@ -875,7 +882,7 @@ export default{
 
             clipboardActionsShow: false,
             clipboardActions: [
-                { divName: 'div', propName: 'pro', propVal:11.5 }
+                //{ divName: 'div', propName: 'pro', propVal:11.5 }
             ],
 
 
@@ -898,7 +905,7 @@ export default{
     computed:{
         divSelectedName(){
             console.log('divSelectedName -> select ('+this.lSelected+') layers',this.layers);
-            if( this.lSelected == -1 || this.layers.length == 0 ) return 'NaN';
+            if( this.lSelected == -1 || this.layers.length == 0 || this.layers.length < this.lSelected ) return 'NaN';
             else if( 'divName' in this.layers[ this.lSelected ] ){
                 return this.layers[ this.lSelected ]['divName'];
             } else {
@@ -931,6 +938,28 @@ export default{
                 else
                     return 'No id . . <'+tagName+'>';
             };
+        },
+        
+        
+        cb_canRemove(){
+            if( this.lSelected == -1 ) return false;
+            if( this.propertiesSelected.length == 0 ) return false;
+            for( let pName of this.propertiesSelected){
+                let pFrames = this.getKFrames( this.layers[ this.lSelected ]['divName'], pName );
+                if( pFrames != -1 ) console.log( `pFrames toRaw (${JSON.stringify(toRaw(pFrames[ 'keys' ][ this.frameNo ]))})  as raw:`,pFrames[ 'keys' ][ this.frameNo ] );
+                if( pFrames != -1 && JSON.stringify(toRaw( pFrames[ 'keys' ][ this.frameNo ] ) ) != 'null' ) 
+                    return true;
+            }
+            
+            return false;
+
+        },
+        cb_canCopy(){
+            return this.cb_canRemove;
+
+        },
+        cb_canPast(){
+            return this.lSelected != -1 && this.clipboardActions.length > 0;
         }
 
     },
@@ -1031,6 +1060,14 @@ export default{
             this.divFindName = 'dA';            
             this.onDivFindName(['top']);
             this.nstTreePathSelected = [ [ 47, 1, 1, 0, 0 ] ];
+        },
+
+        getKFrames( divName, pName ){
+            let layers = this.layers;
+            let lId =  layers.findIndex( l => `${l.divName}` == `${divName}` );
+            if( lId == -1 ) return -1;
+            let pId = this.layers[ lId ]['kFrames'].findIndex( p => p.name == pName );
+            return pId == -1 ? -1 : this.layers[ lId ]['kFrames'][ pId ];
         },
 
         /** so one liner iFs file load */
@@ -1490,6 +1527,8 @@ export default{
         },
 
         onSelectNodeFromDome(){
+
+            this.nstTreePathSelected = [];
             
             let onMouseMoveSelector = (e) =>{
                 //console.log('nst-S mouse at ',e.clientX,e.clientY);
@@ -1514,8 +1553,12 @@ export default{
                 e.stopPropagation();
                 if( this.elSelected != null ){
                     let id = this.elSelected.getAttribute('id');
-                    this.divFindName = id;
-                    this.onDivFindName([]);
+                    if( id != null ){
+                        this.divFindName = id;
+                        this.onDivFindName([]);
+                    }else{
+                        $.toast('<i class="fa-solid fa-bullseye" /> - Inspector cancel no id in node.');
+                    }
                     deactivateSelector();
                 }
             };
@@ -1971,6 +2014,47 @@ export default{
             return tr;
         },
 
+        onPasteKeyFrame(){
+
+            let fNo = parseInt( this.frameNo );
+            if( this.nstTreeNodesSelected.length == 0 ) return -1;
+            let tr = [];   
+            let divName = '';        
+            
+            for( let cb of this.clipboardActions ){
+                //for( let divO of this.nstTreeNodesSelected ){
+                //    let divName = divO.getAttribute('id');
+                    divName = `#${this.divFindName}`;
+                    for( let layer of this.layers ){
+                        if( layer.divName.substring(1) === divName.substring(1) ){
+                            let pId = layer.kFrames.findIndex( p => p.name === cb.propName );
+                            if( pId == -1 ){
+                                tr.push('as new property ['+cb.propName+']');
+                                layer.kFrames.unshift( {
+                                    'name': cb.propName,
+                                    'keys': new Array( this.framesTotal ),
+                                    'lHelpers': new Array(  this.framesTotal )
+                                } );
+                                pId = 0;
+                            }else{
+                                tr.push('added to existing ['+cb.propName+']');
+                            }
+                            
+                            layer.kFrames[ pId ]['keys'][ this.frameNo ] = cb.key;
+                            layer.kFrames[ pId ]['lHelpers'][ this.frameNo ] = cb.lHelper;
+
+
+                        }
+                    }
+                //}
+            }
+
+            if( tr.length > 0 ){
+                $.toast( 'Paste to ['+divName+'] with result <br>* '+tr.join(' <br>* ') );
+            }
+
+        },
+
         onCopyKeyFrame( ){
             let fNo = parseInt( this.frameNo );
             console.log('nstMulti- onCopyKeyFrame  frameNo('+fNo+')',this.doDebugDump() );
@@ -1991,14 +2075,16 @@ export default{
                 let cItem = { 
                     'divName': `${layer.divName}`, 
                     'propName': pName, 
-                    'propVal': toRaw( layer.kFrames[ kInd ][ 'keys' ][ fNo ] )
+                    'key': toRaw( layer.kFrames[ kInd ][ 'keys' ][ fNo ] ),
+                    'lHelper': toRaw( layer.kFrames[ kInd ][ 'lHelpers' ][ fNo ] )
                 };
                 let isTest = this.clipboardActions.findIndex( ci => ci.divName == cItem.divName && ci.propName == cItem.propName );
                 if( isTest == -1 ){
                     this.clipboardActions.push( cItem ); 
                     console.log('nstTl cb add ',cItem); 
                 }else{
-                    this.clipboardActions[ isTest ]['propVal'] = cItem.propVal; 
+                    this.clipboardActions[ isTest ]['keys'] = cItem.key;
+                    this.clipboardActions[ isTest ]['lHelper'] = cItem.lHelper; 
                     console.log('nstTl cb update ',cItem); 
                 }                 
                     //layer.kFrames[ kInd ][ 'lHelpers' ][ fNo ]
@@ -2009,17 +2095,19 @@ export default{
 
         onExecuteToast( res ){
             if( res == 0 )
-                $.toast(`Removed key frame ${res}`);
+                $.toast(`Removed key frame <br>Result: [${res}]`);
             else if (res == -20 )
                 $.toast(`Added to clipboard<br>Actions ...`);
             else if (res == -1 )
-                $.toast(`EE Nothing selected for action.`);
+                $.toast(`EE     Nothing selected for action.`);
             else if (res == -2 )
-                $.toast(`EE wrong properties selection count.`);
+                $.toast(`EE     Wrong properties selection count.`);
+            else if (res == -19 )
+                $.toast(`EE     No properties found to remove.`);
             else if (res == -4 )
-                $.toast(`EE Nothing to remove. Key frame is empty.`);
+                $.toast(`EE     Nothing to remove. Key frame is empty.`);
             else if (res == -3 )
-                $.toast(`EE no kFrame name definition`);
+                $.toast(`EE     No kFrame name definition`);
             else if (res == -8 )
                 $.toast(`Skip is all ready...`);
 
@@ -2037,14 +2125,19 @@ export default{
         onRemoveKeyFrame_execute(){
             let fNo = parseInt( this.frameNo );
             if( this.lSelected == -1 ) return -1;
-            if( this.propertiesSelected.length != 1) return -2;
-            let pName = `${this.propertiesSelected}`;
+            if( this.propertiesSelected.length == 0) return -2;
             let layer = this.layers[ this.lSelected ];
-            let kInd = layer.kFrames.findIndex( p => p.name == pName );
-            if( kInd == -1 ) return -3;
-            if( layer.kFrames[ kInd ][ 'keys' ][ fNo ] == null ) return -4;
-            layer.kFrames[ kInd ][ 'keys' ][ fNo ] = null;
-            layer.kFrames[ kInd ][ 'lHelpers' ][ fNo ] = null;
+
+            let kInd = -1;
+            for(let pName of this.propertiesSelected ){
+                kInd = layer.kFrames.findIndex( p => p.name == pName );
+                if( kInd == -1 ) return -3;
+                if( layer.kFrames[ kInd ][ 'keys' ][ fNo ] == null ) return -4;
+                layer.kFrames[ kInd ][ 'keys' ][ fNo ] = null;
+                layer.kFrames[ kInd ][ 'lHelpers' ][ fNo ] = null;
+            }
+
+            if( kInd == -1 ) return -19;
 
             this.rebuildTimeLimeMain();
             this.makeSelectedNode_ByName( layer.divName, [ layer.kFrames[ kInd ]['name'] ] );
