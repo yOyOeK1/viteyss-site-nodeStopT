@@ -7,7 +7,7 @@
         <i class="fa-solid fa-reply"></i>
     </button>
     <div style="display:inline-block;min-width:18px;min-height: 18px;">
-        <div style="transform:rotate(-90deg);position:absolute;font-size: 75%; color: darkslateblue;">
+        <div style="transform:rotate(-90deg);position:absolute;font-size: 75%;">
             {{ current }}/{{counter }}
         </div>
     </div>

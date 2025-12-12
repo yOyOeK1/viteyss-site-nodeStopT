@@ -110,8 +110,139 @@
             Tools:<br></br>
         -->
         
-
+        
         <div class="nstBox1">
+        
+
+            <!-- file / tools / ... START -->
+
+            <div v-if="true" class="nstDebugBar"
+                style="position:relative;"
+                id="nstDebugTmpBar">
+
+                <button @click="fileToolsShow=!fileToolsShow"
+                    title="File / tools / ..."><i class="fa-solid fa-ellipsis-vertical"></i></button>
+
+
+                <div 
+                    v-show="fileToolsShow"
+                    style="background-color: #aaccbb55;
+                    width:100%;height:100%;
+                    position:fix;top:0px;left:0px;
+                    z-index: 19;"
+                    @mouseover="fileToolsShow=false"                    
+                    >
+                
+            
+                
+                </div>
+
+                <div 
+                    v-show="fileToolsShow"
+                    id="nstToolsBlock"
+                    style="
+                        border:solid darkolivegreen 4px;
+                        border-radius: 15px;
+                        background-color: rgb(111,66,103);
+                        color:white;
+                        position: absolute;
+                        margin-top:10px;
+                        z-index:20;
+                        padding:10px;
+                        min-width:200px;
+                        max-height:66vh;
+                        top: -8px;
+                        overflow-y: auto;
+                        box-shadow: rgb(50, 50, 50) 5px 8px 15px;
+                        
+
+                    "
+                    >
+
+                    <div>
+
+                        <h4>
+                            File / tools / ...
+                        </h4>
+
+                    </div>
+
+                    <!-- files aks load / save animation -->
+                    <div class="nstDebugBar"
+                        id="nstLoadSaveBar">
+                        <button @click="onLoadToLocal()" title="Load node stop time file or json"><i class="fa-solid fa-upload"></i>Open file ...</button><br>
+                        <button @click="onSaveToLocal()" title="Save node stop time file"><i class="fa-solid fa-floppy-disk"></i>Save file as ...</button>
+                    </div>
+
+
+                    <!-- undo / -->
+                    <div>
+                        <div class="nstHistoryBar"
+                            id="nstHistoryBar">
+                            <NstHistory 
+                                ref="nstHistoryO"
+                                :layers="layers"
+                                :metadata="metadata"
+                                :lSelected="lSelected"
+                                :divFindName="divFindName"
+                                :nstTreePathSelected="nstTreePathSelected"
+                                @nst-history-swap="onEmit_nstHistorySwap"
+                                />
+                        </div>
+
+                    </div>
+
+
+                    <!-- ui animation -->
+                    <div class="nstHistoryBar"
+                            id="nstUiAnimationBar">
+                        <div style="display: inline-block;">
+
+                            <input type="checkbox" 
+                                title="Animate Ui"
+                                v-model="doAnimations" 
+                                id="nstAniUi"
+                                style="display:none;" />
+                            <button @click="doAnimations=!doAnimations">
+                                <span v-if="doAnimations">
+                                    <i class="fa-solid fa-gauge"
+                                        style="color:orange;"
+                                        title="Disable animation of Ui"></i>
+                                    Ui animating
+                                </span>
+                                <span v-else >
+                                    <i class="fa-solid fa-gauge-high"
+                                            title="Enable animation of Ui"></i>
+                                    Ui instant
+                                </span>
+                            </button>
+
+                        </div>
+                    </div>
+
+
+                    <hr>
+                    <!-- debug section -->
+                    <div v-if="true" class="nstDebugBar"
+                        id="nstDebugTmpBar">               
+
+                        <button @click="test_setMulti()">sM</button>
+                        <button @click="test_setSingle()">sS</button>
+                        <button @click="test_loadFileOnStart()">fL</button>
+                        <button @click="divFindName='dB'; onDivFindName([]);onAddKeyFrame()">q?</button>
+                    
+                    </div>
+
+
+
+                </div>
+
+            </div>
+
+            <!-- file / tools / ... END -->
+
+
+   
             <div class="nstControlsBar"
                 id="nstControlsBar">
                 <button @click="setFrameNo( 0 ); nstTimeSlideInput_focus();" title="|< to start"><i class="fa-solid fa-backward-step"></i></button>
@@ -132,59 +263,14 @@
                 <button @click="setFrameNo( framesTotal );nstTimeSlideInput_focus();" title=">| to end"><i class="fa-solid fa-forward-step"></i></button>
             </div>
 
-            <div class="nstDebugBar"
-                id="nstLoadSaveBar">
-                <button @click="onLoadToLocal()" title="Load node stop time file or json"><i class="fa-solid fa-upload"></i></button>
-                <button @click="onSaveToLocal()" title="Save node stop time file"><i class="fa-solid fa-floppy-disk"></i></button>
-            </div>
-
             
-            
-            <div v-if="true" class="nstDebugBar"
-                id="nstDebugTmpBar">
-
-                <div style="display: inline-block;">
-
-                    <input type="checkbox" 
-                        title="Animate Ui"
-                        v-model="doAnimations" 
-                        id="nstAniUi"
-                        style="display:none;" />
-                    <button @click="doAnimations=!doAnimations">
-                    <i v-if="doAnimations" class="fa-solid fa-gauge"
-                            style="color:orange;"
-                            title="Disable animation of Ui"></i>
-                    <i v-else class="fa-solid fa-gauge-high"
-                            title="Enable animation of Ui"></i>
-                    </button>
-
-                </div>
-
-                <button @click="test_setMulti()">sM</button>
-                <button @click="test_setSingle()">sS</button>
-                <button @click="test_loadFileOnStart()">fL</button>
-                <button @click="divFindName='dB'; onDivFindName([]);onAddKeyFrame()">q?</button>
-            
-            </div>
 
 
             <!--
                 <button @click="$refs.nstHistoryO.echo('hi')">o</button>
             -->
 
-            <div class="nstHistoryBar"
-                id="nstHistoryBar">
-                <NstHistory 
-                    ref="nstHistoryO"
-                    :layers="layers"
-                    :metadata="metadata"
-                    :lSelected="lSelected"
-                    :divFindName="divFindName"
-                    :nstTreePathSelected="nstTreePathSelected"
-                    @nst-history-swap="onEmit_nstHistorySwap"
-                    />
-            </div>
-
+            
 
             <div
                 class="nstFindBar"
@@ -229,10 +315,9 @@
                 </button>
 
                 <button
-                    title="Select node from local dome with cursor"
+                    title="Show tree dom view"
                     @click="onTlTreeViewToogle()"
                     id="nstBtTreeOpenShow"
-                    :style=" 'color:'+(elSelectedIsActive?'red':'white')+';' "
                     ><i class="fa-solid fa-diagram-project"></i>
                 </button>
 
@@ -879,6 +964,8 @@ export default{
             propertiesUpdateDelay:-1,
             observeAtId: null,
             observe: null,
+
+            fileToolsShow: true,
 
             clipboardActionsShow: false,
             clipboardActions: [
