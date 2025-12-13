@@ -14,10 +14,60 @@ class nstLib{
 
     }
 
+
+    makeClone( task ){
+        
+        if( document.getElementById( task.ndivName ) != null ){
+            console.log( 'nstLib - make clone [ task.ndivName ]\n\tis existing ....' );
+            return -1;
+        }else{
+            let srcDivName = task.lSrc.divName.substring(1);
+            console.log( 'nstLib - make clone [ # '+srcDivName+' ] to => [ '+task.ndivName+' ] \n\tmaking clone ....',
+                '\n\ntask:\n\n',task
+             );
+            let srcTarget = document.getElementById( srcDivName );
+            let nTarget = srcTarget.cloneNode( true );
+            nTarget.setAttribute('id', task.ndivName );
+            srcTarget.parentNode.appendChild( nTarget );
+            task['targetSrc'] = JSON.parse( JSON.stringify( task.lSrc) );
+            task['targetSrc']['divName'] = '#'+task.ndivName;
+        }
+
+        return task;
+        //this.layers.push( lSrc );
+        
+    }
+
+
+    onLoadTasks( onLoad , layers = [] ){
+        if( onLoad == undefined ){
+            return layers;
+        };
+        for( let taskK of Object.keys(onLoad) ){
+            let task = onLoad[ taskK ];
+            if( task.action == 'clone' ){
+                console.log('make clone ', task);
+                let cLayer = this.makeClone( task );
+                if( cLayer != -1 ){
+                    let isId = layers.findIndex( l =>  `${l.divName}` == `${cLayer.ndivName}`);
+                    if( isId == -1 ){
+                        layers.push( cLayer.targetSrc );
+                    }
+                }
+            }
+        }
+
+        return layers;
+    }
+
     getTimeline_FromJsonData ( jData ) {
         
         let layers = jData.layers;
         let metadata = jData.metadata;
+        console.log( 'nstL - dump meta data on getTimeLine ,',metadata );
+        if( metadata == undefined ){
+            console.info( jData );
+        }
 
         let tr = [];
         let tl = ajscreateTimeline({

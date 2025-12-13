@@ -128,9 +128,9 @@
                     v-show="fileToolsShow"
                     style="background-color: #aaccbb55;
                     width:100%;height:100%;
-                    position:fix;top:0px;left:0px;
+                    position:fixed;top:0px;left:0px;
                     z-index: 19;"
-                    @mouseover="fileToolsShow=false"                    
+                    @mouseover="fileToolsShow=false;"                    
                     >
                 
             
@@ -183,6 +183,7 @@
                         <div><b>File:</b></div>
                         <div
                             id="nstLoadSaveBar">
+                            <button @click="onNewToLocal()" title="New node stop time file or json"><i class="fa-solid fa-file-circle-plus"></i>New file ...</button><br>
                             <button @click="onLoadToLocal()" title="Load node stop time file or json"><i class="fa-solid fa-upload"></i>Open file ...</button><br>
                             <button @click="onSaveToLocal()" title="Save node stop time file"><i class="fa-solid fa-floppy-disk"></i>Save file as ...</button>
                         </div>
@@ -283,6 +284,7 @@
             
 
             <div
+                v-show="!isPlaying"
                 class="nstFindBar"
                 id="nstFindDivBar">
 
@@ -506,6 +508,7 @@
                     &nbsp;
                     
                     <button
+                        :disabled="!properties_canAdd"
                         id="nstInsertKeyFrameNodeFastBt"
                         title="Insert key frame (+)"
                         @click="onAddKeyFrame();( closePropertiesAfterAdding ? showProperties=false : '' )"
@@ -577,7 +580,7 @@
         >Layers:<br></br>
 
         <div
-            v-for="layer in layers"
+            v-for="layer,layerInd in layers"
              style="                    
                     display: inline-block;
                 "
@@ -632,8 +635,21 @@
                     <i class="fa-solid fa-broom"
                         @click="console.log('TODO')"></i> | 
                     -->
-                    <i class="fa-regular fa-trash-can"
-                        @click="removeLayer_ByName( layer.divName )"></i>
+                    
+                    <button
+                        title="Clone"
+                        @click="onCloneLayer_ByName( layerInd )"
+                        >
+                        <i class="fa-regular fa-clone"></i>
+                    </button>
+                    
+                    <button
+                        title="Remove this layer"
+                        @click="onRemoveLayer_ByName( layerInd )"
+                        >
+                        <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                        
 
                 </div>
                 
@@ -837,11 +853,11 @@ export default{
                     nstTLMSDiv.append(', R/tl START @ 0ms');
         
                 }, 0);
-                this.timeLine.label('end', this.framesTotalMs )
+                this.timeLine.label('end', this.metadata.framesTotalMs )
                 .call(()=>{ 
-                    console.log('R/tl END @ '+this.framesTotalMs+'ms');
-                    nstTLMSDiv.append(', R/tl END @ '+this.framesTotalMs+'ms');
-                }, this.framesTotalMs)
+                    console.log('R/tl END @ '+this.metadata.framesTotalMs+'ms');
+                    nstTLMSDiv.append(', R/tl END @ '+this.metadata.framesTotalMs+'ms');
+                }, this.metadata.framesTotalMs)
 
             },200);
         }
@@ -875,13 +891,17 @@ export default{
 
         setTimeout(()=>{
             //this.nstTreePathSelected = [];
-            console.log('nstMulti - temp force selection two');
-            this.divFindName = 'dB';            
-            this.onDivFindName(-8);
-            this.nstTreePathSelected = [ [ 47, 1, 1, 0, 1 ], [ 47, 1, 1, 0, 0 ] ];
-            this.showProperties = false;
-            this.onWindowResize( window.innerWidth, window.innerHeight);
-            this.test_loadFileOnStart(); // load test file
+            if( 1 ){
+                console.log('nstMulti - temp force selection two');
+                this.divFindName = 'dB';            
+                this.onDivFindName(-8);
+                this.nstTreePathSelected = [ [ 47, 1, 1, 0, 1 ], [ 47, 1, 1, 0, 0 ] ];
+                this.showProperties = false;
+                this.onWindowResize( window.innerWidth, window.innerHeight);
+            }
+            
+           // this.test_loadFileOnStart(); // load test file
+           this.onNewToLocal();
 
         },500);
 
@@ -893,14 +913,17 @@ export default{
     props:[ 'homeUrl' ],
     data(){
 
+        
         let fps = 10.00;
         let framesTotal = 20;
-
+        
         let frameMs = parseInt( 1000.00 / fps );
-        let framesTotalMs = frameMs* (framesTotal-1);
+        //let framesTotalMs = frameMs* (framesTotal-1);
+
 
         let nstTLMS = -1;
         let nstl = new nstLib();
+
 
         return {
             nstLibO: nstl,
@@ -908,14 +931,7 @@ export default{
             doAnimations: true,
 
 
-            metadata: {
-                fps: fps,
-                framesTotal: framesTotal,
-                timeLine: -1,
-                frameMs: frameMs,
-                framesTotalMs: framesTotalMs,
-                assets: []
-            },
+            metadata: this.nstDef_metadata(),
             
             isPlaying: false,
             replayTimeScale: 1.0,
@@ -929,10 +945,11 @@ export default{
 
             frameNo: 0,
             frameNoAtMs: 0,
+
             frameMs: frameMs,
             fps: fps,
             framesTotal:framesTotal,
-            framesTotalMs: framesTotalMs,
+            //framesTotalMs: framesTotalMs,
 
             iterator: null,
 
@@ -975,16 +992,15 @@ export default{
             observeAtId: null,
             observe: null,
 
-            fileToolsShow: true,
+            fileToolsShow: false,
 
             clipboardActionsShow: false,
             clipboardActions: [
                 //{ divName: 'div', propName: 'pro', propVal:11.5 }
             ],
 
-
             lSelected:-1,
-            layers: [],
+            layers: ref([]),
 
             nstTreePathSelected:[ 
                 //[ 47, 1, 1, 0, 1 ], [ 47, 1, 1, 0, 0 ]
@@ -1057,6 +1073,9 @@ export default{
         },
         cb_canPast(){
             return this.lSelected != -1 && this.clipboardActions.length > 0;
+        },
+        properties_canAdd(){
+            return this.nstTreePathSelected.length>0;
         }
 
     },
@@ -1159,6 +1178,39 @@ export default{
             this.nstTreePathSelected = [ [ 47, 1, 1, 0, 0 ] ];
         },
 
+
+        update_metadata( metadata ){
+            if( !('onLoad' in metadata ) ) metadata['onLoad'] = {};
+            if( !('cloneCounter' in metadata ) ) metadata['cloneCounter'] = 0;
+
+            return metadata;
+        },
+
+        update_layers( layers, metadata ){
+            if( layers.length == 0 ){
+                return [ this.layer_getSetting( metadata ) ];
+            }else if( layers[0].divName != '$$Settings' ){
+                layers.unshift( this. layer_getSetting( metadata ) )
+            }
+            return layers;
+        },
+
+        nstDef_metadata( fps=10, framesTotal = 20 ){
+            let frameMs = parseInt( 1000.00 / fps )
+            return {
+                fps: fps,
+                framesTotal: framesTotal,
+                timeLine: -1,
+                frameMs: frameMs,
+                framesTotalMs: frameMs* (framesTotal-1),
+                assets: [],
+                cloneCounter: 0,
+                onLoad: {}
+            };
+        },
+        
+
+
         getKFrames( divName, pName ){
             let layers = this.layers;
             let lId =  layers.findIndex( l => `${l.divName}` == `${divName}` );
@@ -1170,8 +1222,11 @@ export default{
         /** so one liner iFs file load */
         async test_loadFileOnStart( iFsPath = undefined ){
             if( iFsPath == undefined ){
-                //'nst/nst_v3_1.ajs'
-                iFsPath = 'nst/tests/actionsGoTo_label.js';
+                //iFsPath = 'nst/nst_v3_1.ajs'
+                iFsPath = 'nst/testsClone/actionsGoTo_label.js';
+                iFsPath = 'nst/tests_clone/251212tt151408_db_clone.js';
+                iFsPath = 'nst/251203tt_7seg_2.js';
+                //iFsPath = 'nst/tests/251212tt_clone3.js';
             }
             //this.fileDialogOpen = true;
             this.lSelected = -1;
@@ -1220,7 +1275,7 @@ export default{
                     };
                     mkTrashHold( 'nstTL_w_resize', upDateFunc, 550 );
                 }else{
-                    this.UIkeyCellWidth = parseFloat(tmpO.wtarget);
+                    this.UIkeyCellWidth = parseInt(tmpO.wtarget);
                 }
             }
             console.log(`nstTL on cell [${this.UIkeyCellWidth}]`);
@@ -1299,38 +1354,40 @@ export default{
             
         },  
 
+        
+        layer_getSetting( metadata ){
+            return {
+                divName: '$$Settings',
+                order: -1,
+                isVisible: true,
+                domType: 'settings',
+                domSrcOver: 'local',
+                nodeObservator: null,
+                obj: null,//$(divName),
+                frameAddedAt: 0,
+                kFrames: [
+                    {
+                        "name": "labels",
+                        "keys": new Array( metadata.framesTotal ),
+                        "lHelpers": new Array( metadata.framesTotal ),
+                    },
+                    {
+                        "name": "actions",
+                        "keys": new Array( metadata.framesTotal ),
+                        "lHelpers": new Array( metadata.framesTotal ),
+                    }
+                ],
+                propertiesNow: {}
+            };
+        },
+
         layer_getByDivName( divName, addToLayers = true ){
 
             let layers = this.layers;
 
             // if zero add settings / labels / actions layer START
             if( layers.length == 0 ){
-                layers.push({
-                    divName: '$$Settings',
-                    order: -1,
-                    isVisible: true,
-                    domType: 'settings',
-                    domSrcOver: 'local',
-                    nodeObservator: null,
-                    obj: null,//$(divName),
-                    frameAddedAt: 0,
-                    kFrames: [
-                        {
-                            "name": "labels",
-                            "keys": new Array( this.framesTotal ),
-                            "lHelpers": new Array( this.framesTotal ),
-                        },
-                        {
-                            "name": "actions",
-                            "keys": new Array( this.framesTotal ),
-                            "lHelpers": new Array( this.framesTotal ),
-                        }
-                    ],
-                    propertiesNow: {}
-                });
-
-
-
+                layers.push( this.layer_getSetting( this.metadata ) );
             }
             // if zero add settings / labels / actions layer END
 
@@ -1403,6 +1460,20 @@ export default{
         },
 
 
+        onNewToLocal(){
+            setTimeout(()=>{
+                this.unSelectElement();
+                this.nstTreePathSelected = [];
+                this.metadata.timeLine = -1;
+                this.metadata = this.nstDef_metadata();
+                this.layers = this.update_layers( [], this.metadata );
+                this.frameNo = 0;
+                this.rebuildTimeLimeMain();
+                this.onDivFindName([]);
+                
+                $.toast('New file started ....'+this.layers.length);
+            },2);
+        },
         
         onLoadToLocal(){
             let fd = null;
@@ -1426,17 +1497,23 @@ export default{
         onLoadToLocalFromString( f ){
             
             let fj = JSON.parse( f );
-            this.metadata = fj.metadata;
+            let metadata = this.update_metadata( fj.metadata );
+            this.metadata = metadata;
 
-            if( 'assets' in this.metadata ){
-               for( let pay of this.metadata.assets ){                
+            if( 'assets' in metadata ){
+               for( let pay of metadata.assets ){                
                     pay['homeUrl'] = this.homeUrl;
                     let res = nstImportAsset( pay );                    
                 }
             }
+
+            if( 'onLoad' in metadata )
+                fj.layers = this.nstLibO.onLoadTasks( metadata['onLoad'], fj.layers );
+                       
             
             setTimeout(()=>{            
                 let TlRes = this.nstLibO.getTimeline_FromJsonData( fj );
+                fj.layers = this.update_layers( fj.layers, metadata );
                 this.layers = fj.layers;
 
                 this.setTimeLine( TlRes.timeLine );
@@ -1694,6 +1771,8 @@ export default{
             this.divFindName = '';
             this.propertiesSelected = [];
             //this.showProperties = true;
+            this.onStop();
+            this.observeAtId = -1;
 
         },
 
@@ -1813,6 +1892,8 @@ export default{
 
             this.$refs.nstHistoryO.saveStase('make-selected-node_by-div-obj');
         },
+
+
 
         removeLayer_ByName( layerName ){
             console.log('remove layer:',layerName);
@@ -2146,12 +2227,49 @@ export default{
                 //}
             }
 
+
             if( tr.length > 0 ){
+                this.rebuildTimeLimeMain();            
                 $.toast( 'Paste to ['+divName+'] with result <br>* '+tr.join(' <br>* ') );
             }
 
         },
 
+
+        onCloneLayer_ByName( layerInd ){
+            let lSrc = JSON.parse( JSON.stringify( toRaw( this.layers[ layerInd ] ) ) );
+            let ndivName = lSrc.divName.substring(1)+`_cl`+this.metadata.cloneCounter++;
+            let onLoad = this.metadata.onLoad;
+            onLoad[ ndivName ] = {
+                'action': 'clone',
+                lSrc, 
+                ndivName                
+            };
+            
+            this.layres = this.nstLibO.onLoadTasks( onLoad, this.layers );
+            this.rebuildTimeLimeMain();
+            
+
+
+           
+            /*
+            this.divFindName = ndivName;
+            this.onDivFindName([]);
+            this.rebuildTimeLimeMain();
+            */
+
+        },
+        onRemoveLayer_ByName( layerInd ){
+            if( this.lSelected == layerInd ){
+                this.unSelectElement();
+                this.onDivFindName([]);
+                this.observeAtId = -1;
+            }
+            
+            this.layers.splice( layerInd,1  );
+            this.rebuildTimeLimeMain();
+            
+        },
         onCopyKeyFrame( ){
             let fNo = parseInt( this.frameNo );
             console.log('nstMulti- onCopyKeyFrame  frameNo('+fNo+')',this.doDebugDump() );
@@ -2180,7 +2298,7 @@ export default{
                     this.clipboardActions.push( cItem ); 
                     console.log('nstTl cb add ',cItem); 
                 }else{
-                    this.clipboardActions[ isTest ]['keys'] = cItem.key;
+                    this.clipboardActions[ isTest ]['key'] = cItem.key;
                     this.clipboardActions[ isTest ]['lHelper'] = cItem.lHelper; 
                     console.log('nstTl cb update ',cItem); 
                 }                 
@@ -2361,7 +2479,6 @@ export default{
         },
 
         rebuildTimeLimeMain(){
-
             let lttlRes = this.nstLibO.getTimeline_FromJsonData( {
                 metadata: this.metadata,
                 layers: toRaw (this.layers )
@@ -2370,10 +2487,8 @@ export default{
             console.log('timeline rebuild result\n---------------------------------\n',
                 lttlRes);
                 
-            this.setTimeLine(  lttlRes.timeLine );
-
-            
-            this.$refs.nstHistoryO.saveStase('on-add-key-frame');
+            this.setTimeLine(  lttlRes.timeLine );            
+            this.$refs.nstHistoryO.saveStase('on-rebuild-frame');
 
             return 1;
         },
