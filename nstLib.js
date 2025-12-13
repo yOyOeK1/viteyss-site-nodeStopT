@@ -29,7 +29,7 @@ class nstLib{
             let nTarget = srcTarget.cloneNode( true );
             nTarget.setAttribute('id', task.ndivName );
             srcTarget.parentNode.appendChild( nTarget );
-            task['targetSrc'] = JSON.parse( JSON.stringify( task.lSrc) );
+            task['targetSrc'] = JSON.clone( task.lSrc );
             task['targetSrc']['divName'] = '#'+task.ndivName;
         }
 
@@ -149,7 +149,7 @@ class nstLib{
                     }else if( animOpts.type == 'animate' ){
                         
                         tStart = (frameLast) * metadata.frameMs+1;
-                        opt = JSON.parse( JSON.stringify( animOpts ) );
+                        opt = JSON.clone( animOpts );
                         delete opt['type'];
                         opt['duration'] = (i-frameLast) * metadata.frameMs-1;
 
@@ -256,11 +256,11 @@ function nstAsset_onload( atype, idd, objThis, positionByDrag = true ){
                     'left',  
                     parseInt($('#'+idd).css('left').replaceAll('px',''))+1
                 );
-                aajs.animate('#'+idd,{opacity:1,duration:100});
+                ajsanimate('#'+idd,{opacity:1,duration:100});
 
         }});
     else if( nstMediaExtensions.indexOf( atype ) != -1 ){
-        aajs.animate('#'+idd,{opacity:1,duration:100});
+        ajsanimate('#'+idd,{opacity:1,duration:100});
 
     }
 
@@ -488,7 +488,7 @@ var nstConvert = {
 
     'getIndexOfChildReq': ( oLookFor, tr=[] )=>{
         //console.log('get index ',tr,' tagName now :',oLookFor);
-        if( oLookFor.tagName == 'BODY' ){
+        if( oLookFor.tagName == 'BODY' || oLookFor.parentNode == null ){
             return tr;
         }
         let lookIn = oLookFor.parentNode.children;

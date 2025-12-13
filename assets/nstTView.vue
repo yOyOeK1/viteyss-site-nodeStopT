@@ -1,19 +1,4 @@
 <style>
-
-
-
-.v-enter-active,
-.v-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.v-enter-from{
-    opacity: 0;
-}
-.v-leave-to {
-  opacity: 0;
-  
-}
 </style>
 <template>
     <div id="nstItemTreeRoot">
@@ -128,6 +113,59 @@ export default{
         },200);
     },  
     computed:{
+        /*
+        getTreeBase(){
+
+            let fNode = ( fId, tagName = 'fNode', children = [], parentNode = null ) => {
+                let n = () => {
+                    return {
+                        'tagName': tagName,
+                        'getAttribute':(arg='' )=> {
+                            console.log('n Node call - getAttribute('+arg+')');
+                            return fId;
+                        }, 
+                        'children': children,
+                        'parentNode': parentNode,
+                    };
+
+                };
+                return n();
+                
+            };
+
+            
+            let selC = [];
+            for( let sN of this.getSelectedListNice ){
+                console.log('sN: ',sN);
+                selC.push(
+                    fNode( sN.id, sN.name, sN.node.childern )
+                );
+            }
+            
+            let sel = fNode(
+                '_selected', 'fSelected', selC
+            );
+            for( let c of sel.children )
+                c.parentNode = sel;
+
+
+            let body = fNode(
+                '_body', 'fBody', document.body.children 
+            );
+
+
+            let root = fNode(
+                'fake_root', 'BODY', [sel, body]
+            );
+
+            sel.parentNode = root;
+
+
+
+
+            return root;
+        },
+        */
         getSelectedListNice(){
             let tr = [];
 
@@ -162,7 +200,9 @@ export default{
 
         onRebuild(){
             this.children = [];
+            //this.children = [this.getTreeBase];
             this.children = document.body.children;
+            //debugger;
         },
         onSelectedItem( data ){
             console.log('on selected item from tree target \n',data);

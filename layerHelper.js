@@ -270,7 +270,7 @@ let layers_from_json=( nst, json, opts )=>{
     json.layers.forEach( l =>{
         l.kFrames.forEach( (para, pIn) =>{
             let lHelpers = new Array( para.keys.length );
-            let lHelOrg = JSON.parse( JSON.stringify( para ) );
+            let lHelOrg = JSON.clone( para );
 
             para.lHelpers.forEach( (lH, fNo) => {
                 if( lH != null ){

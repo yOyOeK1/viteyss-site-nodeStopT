@@ -287,7 +287,8 @@
                 v-show="!isPlaying"
                 class="nstFindBar"
                 id="nstFindDivBar">
-
+                
+                <!--
                 <button
                     title="Import assets to canvas"
                     id="nstBtImportAssetsOpenShow"
@@ -295,7 +296,7 @@
                     ><i class="fa-solid fa-file-import"></i></button>
 
 
-
+                    
                 <div 
                     v-if="showImportAssets"
                     style="
@@ -311,12 +312,23 @@
 
                     "
                     >
+                -->
+                <VYButtonContext
+                    title="Import assets to canvas"
+                    icon="<i class='fa-solid fa-file-import'></i>"
+                    v-model:is-showing="showImportAssets"
+                    >
+            
                     <NstAssetsImport 
                         :homeUrl="homeUrl"
                         @nst-assets-import="onAssetsImport"
                         />
 
+                </VYButtonContext>
+
+                <!--
                 </div>
+                -->
 
 
                 <button
@@ -366,13 +378,7 @@
                     
                 </div>
 
-                <div style="display: inline;"
-                    v-if="nstTreeNodesSelected.length > 0">
-                    <button @click="unSelectElement();nstTreePathSelected=[]" 
-                        title="Clear selection to None">
-                        <i class="fa-regular fa-circle-xmark"></i>
-                    </button>
-                </div>
+                
 
                 <div v-if="nstTreeNodesSelected.length == 0" style="display: inline-block;">
 
@@ -387,6 +393,14 @@
                 </div>
                 
                 
+                <div style="display: inline;">
+                    <button @click="unSelectElement();nstTreePathSelected=[]" 
+                        title="Clear selection to None"
+                        :disabled="nstTreeNodesSelected.length == 0"
+                        >
+                        <i class="fa-regular fa-circle-xmark"></i>
+                    </button>
+                </div>
 
 
 
@@ -721,8 +735,9 @@
                                                 layer.divName == divSelectedName &&
                                                 propertiesSelected.indexOf( f.name ) != -1 ?'nstFrameCssBlockCellSelected ':'')
                                             "
-                                        @click="onStop();setFrameNo( index ); makeSelectedNode_ByName( layer.divName, [f.name] );"
-                                        @dblclick="showProperties=true"
+                                        @click.ctrl.stop="makeSelectedNode_ByName( layer.divName, [f.name], 'withCtrl', {propName:f.name, frameNo: index})"
+                                        @dblclick.stop="showProperties=true"
+                                        @click=" if( !$event.ctrlKey ){onStop();setFrameNo( index ); makeSelectedNode_ByName( layer.divName, [f.name]); } "
                                         >
                                         <small 
                                             class="nstCell">
@@ -745,9 +760,16 @@
         </div>
 
     </div>
+    <hr></hr>
 
-
-
+    <!--
+        <VYButtonContext>
+            abc:[
+            o
+            ]
+        </VYButtonContext>
+        -->
+<hr>
 
     <br>
     <br>
@@ -815,6 +837,7 @@ import NstTItemNode from './nstTItemNode.vue';
 
 import NstAction from './nstAction.vue';
 import NstLabel from './nstLabel.vue';
+import VyButtonContext from './vyButtonContext.vue';
 
 //import NstEases from './nstEases.vue';
 //import NstiFs from './nstiFs.vue';
@@ -837,6 +860,7 @@ export default{
         "NstTItemNode": NstTItemNode,
         "NstLabel": NstLabel, 
         "NstAction": NstAction,
+        "VYButtonContext": VyButtonContext,
         //"NstTLCell": NstTimeLineCell,
         //"NstiFileSystem": NstiFs,
     },
@@ -900,7 +924,7 @@ export default{
                 this.onWindowResize( window.innerWidth, window.innerHeight);
             }
             
-           // this.test_loadFileOnStart(); // load test file
+           this.test_loadFileOnStart(); // load test file
            this.onNewToLocal();
 
         },500);
@@ -1226,6 +1250,7 @@ export default{
                 iFsPath = 'nst/testsClone/actionsGoTo_label.js';
                 iFsPath = 'nst/tests_clone/251212tt151408_db_clone.js';
                 iFsPath = 'nst/251203tt_7seg_2.js';
+                //iFsPath = 'nst/tests_Manipulator/251213tt091833.js';
                 //iFsPath = 'nst/tests/251212tt_clone3.js';
             }
             //this.fileDialogOpen = true;
@@ -1278,7 +1303,7 @@ export default{
                     this.UIkeyCellWidth = parseInt(tmpO.wtarget);
                 }
             }
-            console.log(`nstTL on cell [${this.UIkeyCellWidth}]`);
+            //console.log(`nstTL on cell [${this.UIkeyCellWidth}]`);
         },
         onEmit_nstHistorySwap( data ){
             console.log('got history swap !',data);
@@ -1307,7 +1332,7 @@ export default{
         onEmit_setActionsChange( opts ){
             let ff = nstConvert.parseActionSettings( opts.action );
 
-            if(1) console.log(`nstTL action set: `,JSON.stringify(toRaw(opts),null,4),
+            if(1) console.log(`nstTL action set: `, JSON.rawDumpNice( opts ), //JSON.stringify(toRaw(opts),null,4),
                 '\nso after parsing functions:\n',ff
                 );
             
@@ -1786,8 +1811,10 @@ export default{
 
 
             let lookRes = $(`#${this.divFindName}`);
-            console.log('div find name .... ['+this.divFindName+'] have ('+lookRes.length+')' );
-            console.log('[',lookRes,']',' typeof ', typeof lookRes);
+            console.log('div find name .... ['+this.divFindName+'] have '+
+                '\n length: ('+lookRes.length+')'+ 
+                '\n typeof:', typeof lookRes+
+                '\n node: [',lookRes,']');
 
             if( this.divFindName == '' ){
                 this.unSelectElement();
@@ -1809,7 +1836,7 @@ export default{
             //debugger
             
             this.divFindName=data.selectById; 
-            let tm_nstTreePathSelected = JSON.parse( JSON.stringify( toRaw( this.nstTreePathSelected ) ) );
+            let tm_nstTreePathSelected = JSON.cloneRaw( this.nstTreePathSelected  );
             this.onDivFindName(-8);
             if( data.event.event.ctrlKey == true ){
                 let oById = document.getElementById( data.selectById );
@@ -1936,23 +1963,45 @@ export default{
         },
 
         /*** For timeline clicks : if event parameter added */
-        makeSelectedNode_ByName( nName, properties = [], event = undefined ){
+        makeSelectedNode_ByName( nName, properties = [], event = undefined, opts = {} ){
 
             console.log(' make selected node by name :',nName, '\nprops:',properties,'\nevent: ',event);
             
-            console.log('nstTL - click event',event);
-            if( event != undefined ){
-                let pointC = [event.clientX, event.clientY];
-                let divOnC = $($('#nstTLTable'+nName.substring(1))[0]);
-                let divSize = [ divOnC.width(), divOnC.height() ];
-                let seekN = mMapVal( pointC[0], 0, divSize[0], 0,1 );
-                let tFrame = parseInt( this.framesTotal * seekN );
-                if(1)console.log('event seek to ?',
-                        '\n divSize:', divSize,
-                        '\n seekN:',seekN,
-                        '\n newFrame: ',tFrame
-                    );                 
-                    
+
+            // select / unselect propertie
+            if( event == 'withCtrl' ){
+                let iOf = this.propertiesSelected.indexOf( opts.propName );
+                if( iOf == -1 ){
+                    this.propertiesSelected.push( opts.propName );
+                    if( this.doAnimations )
+                        this.animatePropertySelected( properties, nName );
+
+                    if( 'frameNo' in opts )
+                        this.setFrameNo( opts.frameNo );
+                }else{
+                    this.propertiesSelected.splice( iOf, 1 );
+
+                }
+
+
+                return 1;
+
+            }else{
+                console.log('nstTL - click event',event);
+                if( event != undefined ){
+                    let pointC = [event.clientX, event.clientY];
+                    let divOnC = $($('#nstTLTable'+nName.substring(1))[0]);
+                    let divSize = [ divOnC.width(), divOnC.height() ];
+                    let seekN = mMapVal( pointC[0], 0, divSize[0], 0,1 );
+                    let tFrame = parseInt( this.framesTotal * seekN );
+                    if(1)console.log('event seek to ?',
+                            '\n divSize:', divSize,
+                            '\n seekN:',seekN,
+                            '\n newFrame: ',tFrame
+                        );                 
+                        
+                }
+
             }
             
             //this.showProperties = true;
@@ -1960,6 +2009,8 @@ export default{
             if( this.doAnimations )
                 this.animatePropertySelected( properties, nName );
             
+            if( event == 'withCtrl' ) return 1;
+
             this.divFindName = nName.substring(1);
             this.onDivFindName( properties );
 
@@ -2011,11 +2062,13 @@ export default{
                 return undefined;
             } 
             let compCs = window.getComputedStyle( node );
-            compCs.forEach( pName => {
+            //console.log('compCs : ',compCs);
+            for( let pNameK of Object.keys( compCs ) ){
+                let pName = compCs[ pNameK ];
                 fd[ pName ] = node.getAttribute( pName );
                 if( fd[ pName ] == null || fd[ pName ] == 'none' )
                     fd[ pName ] = compCs.getPropertyValue( pName );
-            });
+            }
 
             // observator of changes 
             if( callBackOnChange != undefined ){
@@ -2133,7 +2186,7 @@ export default{
             }
             
             this.propertiesSelected_Set( Object.keys( tr ) );
-            let aniOpts = JSON.parse(JSON.stringify(toRaw(this.animeSelected)));
+            let aniOpts = JSON.cloneRaw( this.animeSelected );
             if( aniOpts['type'] == 'ani. every' ) aniOpts['type'] = 'animate';
             //debugger
             return {
@@ -2237,7 +2290,7 @@ export default{
 
 
         onCloneLayer_ByName( layerInd ){
-            let lSrc = JSON.parse( JSON.stringify( toRaw( this.layers[ layerInd ] ) ) );
+            let lSrc = JSON.cloneRaw( this.layers[ layerInd ] );
             let ndivName = lSrc.divName.substring(1)+`_cl`+this.metadata.cloneCounter++;
             let onLoad = this.metadata.onLoad;
             onLoad[ ndivName ] = {
@@ -2379,7 +2432,7 @@ export default{
                     let actId = this.layers[ this.lSelected ]['kFrames'].findIndex( k=> k.name == 'actions' );
                     if( actId == -1 ) return -1;
                     this.layers[ this.lSelected ]['kFrames'][ actId ]['keys'][ this.frameNo ] = 
-                        JSON.parse( JSON.stringify( toRaw( this.actionsSelected ) ) );
+                        JSON.cloneRaw( this.actionsSelected );
                     
                     this.rebuildTimeLimeMain();
 
@@ -2391,8 +2444,8 @@ export default{
 
 
 
-            let tnstps = JSON.parse( JSON.stringify( toRaw( this.nstTreePathSelected )));
-            let propSel = JSON.parse( JSON.stringify( toRaw( this.propertiesSelected ) ) );
+            let tnstps = JSON.cloneRaw( this.nstTreePathSelected );
+            let propSel = JSON.cloneRaw( this.propertiesSelected );
             
             
             for(let o of this.nstTreeNodesSelected ){
@@ -2501,6 +2554,22 @@ export default{
 
 </script>
 <style>
+
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.v-enter-from{
+    opacity: 0;
+}
+.v-leave-to {
+  opacity: 0;
+  
+}
+
+
+
 .nst{
    text-shadow: none;
 }

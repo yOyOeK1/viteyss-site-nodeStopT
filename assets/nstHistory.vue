@@ -65,7 +65,7 @@ export default{
         
         saveStase( note, opts = undefined ){
 
-            let layers = JSON.parse( JSON.stringify(toRaw(this.layers)));
+            let layers = JSON.cloneRaw( this.layers);
             let meta = -1;//toRaw( this.metadata );
             //meta['timeLine'] = -1;
 
@@ -78,7 +78,7 @@ export default{
                 'divFindName': `${this.divFindName}`,
                 'metadata': meta,
                 'opts': opts,
-                'nstTreePathSelected': JSON.parse( JSON.stringify(toRaw( this.nstTreePathSelected ) ) )
+                'nstTreePathSelected': JSON.cloneRaw( this.nstTreePathSelected )
 
             });
 

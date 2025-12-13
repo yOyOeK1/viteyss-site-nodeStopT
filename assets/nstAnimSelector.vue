@@ -220,9 +220,10 @@ export default{
 
     },
     mounted(){
-        console.log('nst animation selector on  mounted !',
+        /*console.log('nst animation selector on  mounted !',
             '\nselected on Start:',toRaw(this.selected)
         );
+        */
         this.mIsMounted = true;
         
         //this.wantState = this.selected;
