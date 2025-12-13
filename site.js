@@ -1,4 +1,4 @@
-import { createApp } from 'vue';
+import { createApp,toRaw } from 'vue';
 import NstTimeLine from "./assets/nstTimeLine.vue";
 
 import SVGInject from '@iconfu/svg-inject';
@@ -58,8 +58,37 @@ class site{
 
 
     console.log(`-------------------------
-      inject mkTrashHold ---------------`);
+      inject window.mkTrashHold ---------------`);
     window['mkTrashHold'] = mkTrashHold;
+
+
+
+    console.log(`-------------------------
+    * inject JSON.clone 
+    * inject JSON.cloneRaw
+    * inject JSON.rawDump
+    * inject JSON.rawDumpNice
+    * inject JSON.findByKey
+---------------------------------`);
+    JSON.clone = ( j ) => {
+      return JSON.parse( JSON.stringify( j ) );
+    };
+    JSON.cloneRaw = ( j ) => {
+      return JSON.clone( toRaw( j ) );
+    };
+    JSON.rawDump = ( j ) => {
+      return JSON.stringify( toRaw ( j ) );
+    };
+    JSON.rawDumpNice = ( j ) => {
+      return JSON.stringify( toRaw ( j ),null,4 );
+    };
+    JSON.findByKey = ( jIn, keyName, valLook ) =>{
+      for( let ji of jIn ){
+        if( ji[ keyName ] == valLook )
+          return ji;
+      }
+      return -1;
+    };
 
 
 
