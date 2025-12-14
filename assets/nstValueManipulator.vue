@@ -108,7 +108,7 @@
 
 </template>
 <script>
-import VyButtonContext from './vyButtonContext.vue';
+import VyButtonContext from '@viteyss-site-settings1/UiAssets/vyButtonContext.vue';
 
 export default{
     components: { 

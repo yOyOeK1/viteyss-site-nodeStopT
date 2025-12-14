@@ -1,4 +1,62 @@
 <template class="nst">
+
+
+
+
+
+<!-- contexMenu START -->
+
+
+
+<div 
+    :style="`background-color: #aaccbb55;
+        width:100%;height:100%;
+        position:absolute;top:0px;left:0px;
+        z-index: 19;
+        display:${contextMenu2Show?'inline':'none'};`"
+    @mouseover="contextMenu2Show=false"                    
+    />
+
+<div
+        id="nstConMen"
+   :style="`
+        border:solid darkolivegreen 2px;
+        border-radius: 10px;
+        background-color: rgb(207, 241, 224);
+        color:black;
+        position: fixed;
+        margin-top:10px;
+        z-index:20;
+        padding:5px;
+        min-width:150px;
+        max-height:66vh;
+        display:${contextMenu2Show?'inline':'none'};
+        left:${contextMenu2ShowAtPoint[0]-10}px;
+        top:${contextMenu2ShowAtPoint[1]-10}px;
+        overflow-y: auto;
+        box-shadow: rgb(50, 50, 50) 5px 8px 15px;
+        `
+
+    "
+    >
+
+    <div v-if="contextMenu2Wariant=='layersProperty'">
+        Layers propertes:
+    </div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
     <div class="nstInfoNowBar"
         id="nstInfoNowBar" >
         frame: ({{ frameNo }}/{{ framesTotal}}) | ms: ({{frameNoAtMs}}) |
@@ -737,6 +795,7 @@
                                             "
                                         @click.ctrl.stop="makeSelectedNode_ByName( layer.divName, [f.name], 'withCtrl', {propName:f.name, frameNo: index})"
                                         @dblclick.stop="showProperties=true"
+                                        @contextmenu.prevent="onContextmenuOnTimeLine( layer.divName, f.name, index, $event )"
                                         @click=" if( !$event.ctrlKey ){onStop();setFrameNo( index ); makeSelectedNode_ByName( layer.divName, [f.name]); } "
                                         >
                                         <small 
@@ -770,6 +829,9 @@
         </VYButtonContext>
         -->
 <hr>
+
+
+
 
     <br>
     <br>
@@ -837,7 +899,7 @@ import NstTItemNode from './nstTItemNode.vue';
 
 import NstAction from './nstAction.vue';
 import NstLabel from './nstLabel.vue';
-import VyButtonContext from './vyButtonContext.vue';
+import VyButtonContext from '@viteyss-site-settings1/UiAssets/vyButtonContext.vue';
 
 //import NstEases from './nstEases.vue';
 //import NstiFs from './nstiFs.vue';
@@ -924,7 +986,7 @@ export default{
                 this.onWindowResize( window.innerWidth, window.innerHeight);
             }
             
-           this.test_loadFileOnStart(); // load test file
+           //this.test_loadFileOnStart(); // load test file
            this.onNewToLocal();
 
         },500);
@@ -982,6 +1044,11 @@ export default{
             divFindName: ref(''),
             elSelected:null,
             elSelectedIsActive: false,
+
+            contextMenu2Show: false,
+            contextMenu2ShowAtPoint:[0,0],
+            contextMenu2: '',
+            contextMenu2Wariant:'',
 
 
             /*
@@ -2243,6 +2310,22 @@ export default{
                 \n * : ${this.mkNiceStr( this. ) }\n
             `;*/
             return tr;
+        },
+
+
+        onContextmenuOnTimeLine( divName, propName, frameNo, event ){
+            //setTimeout(()=>{
+
+                //console.log('nstTL - context menu ? bum',JSON.rawDumpNice({'contextmenu2Show':this.contextMenu2Show,divName, propName, frameNo, event}),event );
+                this.contextMenu2ShowAtPoint = [ event.pageX, event.pageY ];
+                //this.contextMenu2 = `ok so`;
+                this.contextMenu2Wariant = 'layersProperty';
+                this.divFindName = divName.substring(1);
+                this.onDivFindName([propName]);
+                this.setFrameNo( frameNo );
+                this.contextMenu2Show = true;
+                //$.toast('right button ['+this.contextMenu2Show+']');
+            //},1);
         },
 
         onPasteKeyFrame(){

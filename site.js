@@ -76,6 +76,9 @@ class site{
     JSON.cloneRaw = ( j ) => {
       return JSON.clone( toRaw( j ) );
     };
+    JSON.dumpNice = ( j ) => {
+      return JSON.stringify( j,null,4 );
+    };
     JSON.rawDump = ( j ) => {
       return JSON.stringify( toRaw ( j ) );
     };
