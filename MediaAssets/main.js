@@ -60,6 +60,7 @@ document.addEventListener("DOMContentLoaded", function() {
             window.innerWidth, window.innerHeight
         ); 
     });
+    window.addEventListener( 'keypress', page.onKeypress );
 
 
 });

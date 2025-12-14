@@ -1,5 +1,6 @@
 import { createApp,toRaw } from 'vue';
 import NstTimeLine from "./assets/nstTimeLine.vue";
+import { animate as ajsanimate } from 'animejs';
 
 import SVGInject from '@iconfu/svg-inject';
 
@@ -288,30 +289,30 @@ q - to Cancel
       let onMove = ( e ) =>{
         if( pStart == null ){
           pStart = [ e.pageX, e.pageY ];
-          aajs.animate( '#dDivAngInfo', { 'opacity':1, 'left': e.pageX-50, 'top': e.pageY-50, duration: 500 } );
+          ajsanimate( '#dDivAngInfo', { 'opacity':1, 'left': e.pageX-50, 'top': e.pageY-50, duration: 500 } );
         }
         
         let angle = nstConvert.calculateAngle( pStart[0], pStart[1], e.pageX, e.pageY );
         
         //console.log('rotate it to: ',angle, ' org ', orgPos.rotate);
         
-        //aajs.animate('#angInfoP', {'rotate': angle, duration:2});
+        //ajsanimate('#angInfoP', {'rotate': angle, duration:2});
         rotateSvgSetRC( "anglePointMouse", "angInfoCenter",  angle );
         rotateSvgSetRC( "angInfoB", "angInfoCenter", orgPos.angle + angle );
         $('#angInfStr').html(`< ${orgPos.angle + angle}\``);
         $('#angInfStrShadow').html(`< ${orgPos.angle + angle}\``);
         $('#angInfStr2').html(`${angle}\``);
           
-        aajs.animate('#'+oTargetId, {'rotate': orgPos.angle + angle, duration:1} );
+        ajsanimate('#'+oTargetId, {'rotate': orgPos.angle + angle, duration:1} );
       };
 
       document.body.addEventListener('mousemove', onMove );
       document.body.addEventListener('mouseup',e=>{
         console.log('ok rotate done!');
         document.body.removeEventListener('mousemove', onMove );
-        aajs.animate( '#dDivAngInfo', { 'opacity': 0, duration: 500 });
+        ajsanimate( '#dDivAngInfo', { 'opacity': 0, duration: 500 });
         if( nstLastKey.key == 'q' ){
-          aajs.animate('#'+oTargetId, {'rotate': orgPos.angle,duration:500} );
+          ajsanimate('#'+oTargetId, {'rotate': orgPos.angle,duration:500} );
           
         }
       });
@@ -345,7 +346,7 @@ q - to Cancel
           oTarget.css('top', pStart[1]+e.cXY[1]);
       }, onDone => {
         if( nstLastKey.key == 'q' ){
-          aajs.animate('#'+oTargetId, {'left':orgPos.left, 'top':orgPos.top, duration: 500 } );
+          ajsanimate('#'+oTargetId, {'left':orgPos.left, 'top':orgPos.top, duration: 500 } );
         }
       });
 
@@ -403,7 +404,7 @@ q - to Cancel
         'onAllFinish':()=>{
           $('#ciX').html('X - - - ');
           $('#ciX').attr('x',parseInt($('#ciX').attr('x')));
-          //aajs.animate('#dDivCurInfo',{opacity:0,duration:0});
+          //ajsanimate('#dDivCurInfo',{opacity:0,duration:0});
           this.onSvgInjectionDone();
 
         }
@@ -416,7 +417,7 @@ q - to Cancel
         'onAllFinish':()=>{
           //$('#ciX').html('X - - - ');
           //$('#ciX').attr('x',parseInt($('#ciX').attr('x')));
-          //aajs.animate('#dDivAngInfo',{opacity:1,duration:0});
+          //ajsanimate('#dDivAngInfo',{opacity:1,duration:0});
           //this.onSvgInjectionDone();
 
         }

@@ -14,6 +14,7 @@
         position:absolute;top:0px;left:0px;
         z-index: 19;
         display:${contextMenu2Show?'inline':'none'};`"
+        
     @mouseover="contextMenu2Show=false"                    
     />
 
@@ -61,7 +62,21 @@
         id="nstInfoNowBar" >
         frame: ({{ frameNo }}/{{ framesTotal}}) | ms: ({{frameNoAtMs}}) |
         selected: ({{ divSelectedName }}) / ({{ propertiesSelectedStr }}) | observs: ({{ observeAtId }}) |
-        aSelected: (
+        
+        <div style="display: inline-block;">
+
+            <NstScenarios 
+                :lScenario="metadata.lScenario"
+                :scenarios="metadata.scenarios"
+                @scenario-change="console.log('lScenario change:',$event);metadata.lScenario=$event"
+                @scenarios-change="console.log('scenarios change:',$event.scenarios);metadata.scenarios=$event.scenarios"
+                />
+
+
+        </div> |
+
+        
+        aSel: (
             <!--
                 {{ animeSelected }}) 
                 -->
@@ -620,6 +635,8 @@
                 
 
             </div>
+            
+            
 
         </div>
 
@@ -900,6 +917,7 @@ import NstTItemNode from './nstTItemNode.vue';
 import NstAction from './nstAction.vue';
 import NstLabel from './nstLabel.vue';
 import VyButtonContext from '@viteyss-site-settings1/UiAssets/vyButtonContext.vue';
+import NstScenarios from './nstScenarios.vue';
 
 //import NstEases from './nstEases.vue';
 //import NstiFs from './nstiFs.vue';
@@ -922,7 +940,9 @@ export default{
         "NstTItemNode": NstTItemNode,
         "NstLabel": NstLabel, 
         "NstAction": NstAction,
+        "NstScenarios": NstScenarios,
         "VYButtonContext": VyButtonContext,
+        
         //"NstTLCell": NstTimeLineCell,
         //"NstiFileSystem": NstiFs,
     },
@@ -1090,7 +1110,8 @@ export default{
                 //{ divName: 'div', propName: 'pro', propVal:11.5 }
             ],
 
-            lSelected:-1,
+
+            lSelected: -1,
             layers: ref([]),
 
             nstTreePathSelected:[ 
@@ -1296,7 +1317,14 @@ export default{
                 framesTotalMs: frameMs* (framesTotal-1),
                 assets: [],
                 cloneCounter: 0,
-                onLoad: {}
+                onLoad: {},
+                lScenario: undefined,//-1
+                scenarios: undefined,/*
+                    { id: '-1', name:'Main', opts: { 'abc': 1, 'b':2} },
+                    { id: '1', name:'Abcddde', opts: { 'cc':[6789,56789,6789]} },
+                    { id: '2', name:'Kacocc' },
+                ],
+                */
             };
         },
         
@@ -1372,6 +1400,15 @@ export default{
             }
             //console.log(`nstTL on cell [${this.UIkeyCellWidth}]`);
         },
+
+        onEmit_scenarioChangeAction( ev ){
+            console.log('nstTL scenario actio ','\n ev:',ev, `\n scenario: ${this.scenario}\n scenarios:\n------${JSON.rawDumpNice(this.metadata.scenarios)}`);
+            if( ev.action == 'name' ){
+                this.metadata.scenarios[ this.scenario ] = JSON.cloneRaw( ev.scenario );
+            }
+        },
+
+
         onEmit_nstHistorySwap( data ){
             console.log('got history swap !',data);
             
