@@ -33,7 +33,7 @@ var pathsToSites = [
     __dirnameProcess,
 
     './node_modules/viteyss-site-settings1',
-    //'./node_modules/node-yss/yss/sites',
+    './node_modules/node-yss/yss/sites',
 
     // node-yss / sites
     //path.join( pathNodeYss, 'sites' ),
@@ -72,9 +72,12 @@ var config0 = {
   'name': instanceTitle,
   'HOST': '0.0.0.0',
   'PORT': 8080,
+  //'httpServerOpts':{open:true},
   'wsHOST': '0.0.0.0',
   'wsPORT': 2999,
-  'pathToYss': '../node-yss/yss',
+  //'pathToYss': '../node-yss/yss',
+  'pathToYss': '/home/yoyo/Apps/oiyshTerminal/ySS_calibration',
+  
   'pathsToSites': pathsToSites,
   "pathsToSitesPackages": pathToSitesPackages,
   //'wsInjection': false,

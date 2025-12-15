@@ -68,8 +68,8 @@
             <NstScenarios 
                 :lScenario="metadata.lScenario"
                 :scenarios="metadata.scenarios"
-                @scenario-change="console.log('lScenario change:',$event);metadata.lScenario=$event"
-                @scenarios-change="console.log('scenarios change:',$event.scenarios);metadata.scenarios=$event.scenarios"
+                @scenario-change="onUpdateScenario_storeLayers();metadata.lScenario=$event;onUpdateScenario_swapLayers()"
+                @scenarios-change="onUpdateScenario_storeLayers($event);metadata.scenarios=$event.scenarios;onUpdateScenario_swapLayers()"
                 />
 
 
@@ -326,6 +326,14 @@
             <!-- file / tools / ... END -->
 
 
+            <div v-if="true">
+                <button @click="console.log('* divFindName:',divFindName,'\n* lSelected:',lSelected,'\n* metadata',metadata,'\n* scenLayers:',scenLayers,'\n* layers:',layers);">
+                    d1
+                </button>
+
+            </div>
+
+
    
             <div class="nstControlsBar"
                 id="nstControlsBar">
@@ -544,7 +552,7 @@
 
                     <NstPropSelector 
                         v-if=" ['$$Settings'].indexOf( divSelectedName ) == -1 "
-                        :layerSelected="layelSelected"
+                        :layerSelected="layerSelected"
                         :divSelectedName="divSelectedName"
                         :properties="propertiesSelectedNow"
                         :selected="propertiesSelected"
@@ -614,7 +622,7 @@
  [ <div v-for="o in nstTreeNodesSelected" style="display: inline-block;" >< {{o.tagName.toLowerCase()}} #{{ o.getAttribute('id') }} /> </div> ]
  Properties selected: .  [ {{ `${propertiesSelected}` }} ]
  Properties @:    .....  {{ 1 }} //TODO
- Dom info. :    .......  {{ lSelected!=-1?layers[ lSelected ]['domType']:'- -' }} @ {{ lSelected!=-1?layers[ lSelected ]['domSrcOver']:'- -' }} 
+ Dom info. :    .......  {{ lSelected!=-1?layerSelected['domType']:'- -' }} @ {{ lSelected!=-1?layerSelected['domSrcOver']:'- -' }} 
 </pre>
                             
                 </div>
@@ -1113,6 +1121,8 @@ export default{
 
             lSelected: -1,
             layers: ref([]),
+            scenLayerIndex: -1,
+            scenLayers: ref([]),
 
             nstTreePathSelected:[ 
                 //[ 47, 1, 1, 0, 1 ], [ 47, 1, 1, 0, 0 ]
@@ -1126,18 +1136,56 @@ export default{
             fileDialogOperation: '',
 
         };
+
     },
     computed:{
         divSelectedName(){
-            console.log('divSelectedName -> select ('+this.lSelected+') layers',this.layers);
-            if( this.lSelected == -1 || this.layers.length == 0 || this.layers.length < this.lSelected ) return 'NaN';
-            else if( 'divName' in this.layers[ this.lSelected ] ){
+            if( this.scenario == -1 ){
+                return 'NaN1';
+            }
+            if( this.lSelected == -1 ){
+                return 'NaN2';
+            }
+            
+            if( !this.divFindName ){
+                return 'NaN3';
+            }
+
+            if( this.scenLayerIndex == -1 ){
+                return 'NaN4';
+            }
+
+            if( this.layers.length == 0 ){
+                return 'NaN5';
+            }
+            if( this.layers.length < this.lSelected ){
+                return 'NaN6';
+            }
+            
+
+            return `${this.layers[ this.lSelected ].divName}`;
+           
+
+            /*
+            let lSelected = parseInt( this.lSelected );
+            let lScenario = `${this.metadata.lScenario}`;
+            let sLayerInd = this.scenLayers.findIndex( l => l.divName == lScenario );
+            if( sLayerInd != -1 ){
+                this.scenLayers[ sLayerInd ][ ];
+            }
+                */
+
+            console.log(`divSelectedName -> \n* scenario id: ${this.metadata.lScenario} \n* select (`+this.lSelected+') \n* layers:',this.layers,'\n* scenLayers:',this.scenLayers,'\n* divFindName:',this.divFindName);
+
+            if( this.lSelected == -1 || this.layers.length == 0 || this.layers.length < this.lSelected ) 
+                return 'NaN';
+            else if( this.layers.length <=  this.lSelected && 'divName' in this.layers[ this.lSelected ] ){
                 return this.layers[ this.lSelected ]['divName'];
             } else {
                 return 'NaN2';
             }
         },
-        layelSelected(){
+        layerSelected(){
             if( this.lSelected == -1 ) return -1;
             else return this.layers[ this.lSelected ];
         },
@@ -1187,7 +1235,8 @@ export default{
             return this.lSelected != -1 && this.clipboardActions.length > 0;
         },
         properties_canAdd(){
-            return this.nstTreePathSelected.length>0;
+            return this.nstTreePathSelected.length>0 ||
+                this.layerSelected.divName == `$$Settings`;
         }
 
     },
@@ -1244,6 +1293,7 @@ export default{
 
         },
 
+
         /*
         frameNo( nframe, oframe ){
             return -1;
@@ -1294,6 +1344,9 @@ export default{
         update_metadata( metadata ){
             if( !('onLoad' in metadata ) ) metadata['onLoad'] = {};
             if( !('cloneCounter' in metadata ) ) metadata['cloneCounter'] = 0;
+            if( !('lScenario' in metadata ) ) metadata['lScenario'] = '-1';
+            if( !('scenarios' in metadata ) ) metadata['scenarios'] = [{ id: '-1', name:'Main', opts: { } }];
+            if( !('scenario' in metadata ) ) metadata['scenario'] = { id: '-1', name:'Main', opts: { } };
 
             return metadata;
         },
@@ -1318,8 +1371,9 @@ export default{
                 assets: [],
                 cloneCounter: 0,
                 onLoad: {},
-                lScenario: undefined,//-1
-                scenarios: undefined,/*
+                lScenario: ref('-1'),//-1
+                scenario: -1,
+                scenarios: ref([{ id: '-1', name:'Main', opts: { } }]),/*
                     { id: '-1', name:'Main', opts: { 'abc': 1, 'b':2} },
                     { id: '1', name:'Abcddde', opts: { 'cc':[6789,56789,6789]} },
                     { id: '2', name:'Kacocc' },
@@ -1327,8 +1381,70 @@ export default{
                 */
             };
         },
-        
 
+        layer_getSetting( metadata ){
+            return {
+                divName: '$$Settings',
+                order: -1,
+                isVisible: true,
+                domType: 'settings',
+                domSrcOver: 'local',
+                nodeObservator: null,
+                obj: null,//$(divName),
+                frameAddedAt: 0,
+                kFrames: [
+                    {
+                        "name": "labels",
+                        "keys": new Array( metadata.framesTotal ),
+                        "lHelpers": new Array( metadata.framesTotal ),
+                    },
+                    {
+                        "name": "actions",
+                        "keys": new Array( metadata.framesTotal ),
+                        "lHelpers": new Array( metadata.framesTotal ),
+                    }
+                ],
+                propertiesNow: {}
+            };
+        },
+
+        onUpdateScenario_storeLayers( e = ''){
+            let sId = toRaw( this.metadata.lScenario );
+            console.log(' updateScen layers -> scenLayers: e:',e );
+            let sInd = this.scenLayers.findIndex( sl =>  sl.id == sId );
+            if( sInd == -1 ){ 
+                console.error( 'EE can\'t find target id in scenLayers ['+sId+']' );
+                return -1;
+            }
+
+            this.scenLayers[ sInd ]['layers'] = this.nstLibO.layers_toStr( this.layers );
+            this.scenLayers[ sInd ]['entryDate'] = Date.now();
+            
+
+        },
+        onUpdateScenario_swapLayers( clone = undefined ){
+            //this.unSelectElement();
+            
+            let sId = toRaw( this.metadata.lScenario );
+            console.log(' updateScen scenLayers -> layers :',this.scenLayers);
+            let sInd = this.scenLayers.findIndex( sl =>  sl.id == sId );
+            if( sInd == -1 ){ 
+                console.log( 'EE can\'t find target layer with id: ['+sId+']' ); 
+                this.scenLayers.unshift({ 
+                    id: sId,
+                    layers: [ this.layer_getSetting( this.metadata ) ],
+                    entryDate: Date.now(),
+                });
+                sInd = 0;
+            }
+                        
+            this.metadata.scenario = JSON.cloneRaw( this.metadata.scenarios[ sInd ] );
+            this.scenLayerIndex = this.scenLayers.findIndex( sl=> sl.id == sId );
+            this.layers = JSON.cloneRaw( this.scenLayers[ sInd ].layers );   
+            
+            this.rebuildTimeLimeMain();
+        
+        },
 
         getKFrames( divName, pName ){
             let layers = this.layers;
@@ -1401,14 +1517,20 @@ export default{
             //console.log(`nstTL on cell [${this.UIkeyCellWidth}]`);
         },
 
-        onEmit_scenarioChangeAction( ev ){
-            console.log('nstTL scenario actio ','\n ev:',ev, `\n scenario: ${this.scenario}\n scenarios:\n------${JSON.rawDumpNice(this.metadata.scenarios)}`);
-            if( ev.action == 'name' ){
-                this.metadata.scenarios[ this.scenario ] = JSON.cloneRaw( ev.scenario );
+        /*
+        onEmit_setScenarioChangeAction( isTo, payload ){
+            let metadata = this.metadata;
+            console.log('nstTl onEmit setScenarioChangeActionconsole: ',isTo,'\n\tpayload:\n',payload);
+            console.log('nstTl onEmit setScenar...  metadata:',metadata);
+            if( isTo == 'scenario' ){
+                metadata.lScenario = payload;
+
+            }else if ( isTo == 'scenarios' ){
+                matadata.scenarios = [];
+                //payload);
             }
         },
-
-
+        */
         onEmit_nstHistorySwap( data ){
             console.log('got history swap !',data);
             
@@ -1484,31 +1606,7 @@ export default{
         },  
 
         
-        layer_getSetting( metadata ){
-            return {
-                divName: '$$Settings',
-                order: -1,
-                isVisible: true,
-                domType: 'settings',
-                domSrcOver: 'local',
-                nodeObservator: null,
-                obj: null,//$(divName),
-                frameAddedAt: 0,
-                kFrames: [
-                    {
-                        "name": "labels",
-                        "keys": new Array( metadata.framesTotal ),
-                        "lHelpers": new Array( metadata.framesTotal ),
-                    },
-                    {
-                        "name": "actions",
-                        "keys": new Array( metadata.framesTotal ),
-                        "lHelpers": new Array( metadata.framesTotal ),
-                    }
-                ],
-                propertiesNow: {}
-            };
-        },
+        
 
         layer_getByDivName( divName, addToLayers = true ){
 
@@ -1595,10 +1693,13 @@ export default{
                 this.nstTreePathSelected = [];
                 this.metadata.timeLine = -1;
                 this.metadata = this.nstDef_metadata();
-                this.layers = this.update_layers( [], this.metadata );
+                this.layers = [];
+                let layers = this.update_layers( [], this.metadata );
+                this.scenLayers = [{ id: '-1', layers, entryDate: Date.now() }];
+                this.onUpdateScenario_swapLayers();
                 this.frameNo = 0;
-                this.rebuildTimeLimeMain();
-                this.onDivFindName([]);
+                this.rebuildTimeLimeMain('onNewToLocal');
+                //this.onDivFindName([]);
                 
                 $.toast('New file started ....'+this.layers.length);
             },2);
@@ -1635,20 +1736,21 @@ export default{
                     let res = nstImportAsset( pay );                    
                 }
             }
+            
 
+            // TODO fix clone 
+            /*
             if( 'onLoad' in metadata )
                 fj.layers = this.nstLibO.onLoadTasks( metadata['onLoad'], fj.layers );
-                       
-            
+            */         
+           
+            for( let scel of fj.scenLayers ){
+                scel.layers = this.update_layers( scel.layers, metadata );
+            } 
             setTimeout(()=>{            
-                let TlRes = this.nstLibO.getTimeline_FromJsonData( fj );
-                fj.layers = this.update_layers( fj.layers, metadata );
-                this.layers = fj.layers;
-
-                this.setTimeLine( TlRes.timeLine );
-                //this.lSelected = -1;
-                //this.frameNo = 0;
-                console.log(' on load to lacal.....',TlRes);
+                this.scenLayers = fj.scenLayers;
+                this.onUpdateScenario_swapLayers();
+                console.log(' on load to lacal.....');
                 
                 $.toast(`Loaded<br>
                     fps: ${fj.metadata.fps}<br>
@@ -1661,10 +1763,15 @@ export default{
         },
 
         onSaveToLocal(){
-            let res2 = this.nstLibO.layers_toStr( toRaw(this.layers), toRaw( this.metadata ) );
-            setOpts.FileDialog('save', JSON.stringify(res2, null, 4) );
+            //let res2 = this.nstLibO.layers_toStr( toRaw(this.layers), toRaw( this.metadata ) );
+            this.onUpdateScenario_storeLayers();
+            setOpts.FileDialog('save', JSON.stringify({
+                'metadata': this.nstLibO.metadata_toStr( this.metadata ),
+                'scenLayers': JSON.cloneRaw( this.scenLayers ),
+            }, null, 4) );
         },
 
+        /*
         async onSaveToLocal_old(){
             let res2 = this.nstLibO.layers_toStr( toRaw(this.layers), toRaw( this.metadata ) );
 
@@ -1682,7 +1789,7 @@ export default{
         
           
         },
-
+        */
 
         setFrameNo( e = '',b='' ){
             console.log('nstTl setFrameNo \n\te:[',e,']\n\tb:[',b,'] \nplaying ['+this.isPlaying+'] type ['+(typeof e)+']');
@@ -1908,8 +2015,7 @@ export default{
 
         onDivFindName( properties = [] ){
             if( this.divFindName == '$Settings' ){
-                this.makeSelectedNode_ByDivObj( {selector:'$'+this.divFindName}, properties );
-                
+                this.makeSelectedNode_ByDivObj( {selector:'$$Settings'}, properties );                
                 return 1;
             }
 
@@ -1978,9 +2084,15 @@ export default{
             
         },
 
+
+
+        // select by div id corection 
+
+
         makeSelectedNode_ByDivObj( divObj, properties = [] ){  
               
             //this.clearEmptyLayers();
+            //debugger
             let layer = this.layer_getByDivName( divObj.selector );//layer_get_layerByDivName( this.layers, divObj.selector, this.frameNo );
             this.lSelected = -1;
             if( properties != -8 ) this.animeSelected = this.getAnimeOfNode_layer( layer );
@@ -2402,7 +2514,7 @@ export default{
 
 
             if( tr.length > 0 ){
-                this.rebuildTimeLimeMain();            
+                this.rebuildTimeLimeMain('onPasteKeyFrame');            
                 $.toast( 'Paste to ['+divName+'] with result <br>* '+tr.join(' <br>* ') );
             }
 
@@ -2420,7 +2532,7 @@ export default{
             };
             
             this.layres = this.nstLibO.onLoadTasks( onLoad, this.layers );
-            this.rebuildTimeLimeMain();
+            this.rebuildTimeLimeMain('onCloneLayer');
             
 
 
@@ -2440,7 +2552,7 @@ export default{
             }
             
             this.layers.splice( layerInd,1  );
-            this.rebuildTimeLimeMain();
+            this.rebuildTimeLimeMain( 'removeLayer');
             
         },
         onCopyKeyFrame( ){
@@ -2527,7 +2639,7 @@ export default{
 
             if( kInd == -1 ) return -19;
 
-            this.rebuildTimeLimeMain();
+            this.rebuildTimeLimeMain('removedKeyFrame');
             this.makeSelectedNode_ByName( layer.divName, [ layer.kFrames[ kInd ]['name'] ] );
             this.nstTimeSlideInput_focus();
 
@@ -2545,7 +2657,7 @@ export default{
                     if( labId == -1 ) return -1;
                     this.layers[ this.lSelected ]['kFrames'][ labId ]['keys'][ this.frameNo ] = `${this.labelSelected}`;
 
-                    this.rebuildTimeLimeMain();
+                    this.rebuildTimeLimeMain('onAddKeFrame multi/ setting /  labels');
 
 
                 }else if( this.propertiesSelected == 'actions' ){
@@ -2554,7 +2666,7 @@ export default{
                     this.layers[ this.lSelected ]['kFrames'][ actId ]['keys'][ this.frameNo ] = 
                         JSON.cloneRaw( this.actionsSelected );
                     
-                    this.rebuildTimeLimeMain();
+                    this.rebuildTimeLimeMain('onAddKeFrame multi / settings /  actions');
 
                 }
 
@@ -2584,7 +2696,7 @@ export default{
             let deb = false;
             let cFrame = parseInt(this.frameNo);
             let divName = this.divSelectedName;
-            let layer = this.layelSelected;
+            let layer = this.layerSelected;
             if( layer == -1 ) return -1;
             
             
@@ -2647,11 +2759,11 @@ export default{
                 }
             }
 
-            this.rebuildTimeLimeMain();
+            this.rebuildTimeLimeMain('onAddKeyFrame');
 
         },
 
-        rebuildTimeLimeMain(){
+        rebuildTimeLimeMain( whoWants = '' ){
             let lttlRes = this.nstLibO.getTimeline_FromJsonData( {
                 metadata: this.metadata,
                 layers: toRaw (this.layers )
@@ -2661,7 +2773,7 @@ export default{
                 lttlRes);
                 
             this.setTimeLine(  lttlRes.timeLine );            
-            this.$refs.nstHistoryO.saveStase('on-rebuild-frame');
+            this.$refs.nstHistoryO.saveStase( whoWants==''?'on-rebuild-frame':`on-title-${whoWants}`);
 
             return 1;
         },
@@ -2721,7 +2833,7 @@ export default{
     background-color: rgb(247, 245, 207);
     text-shadow: none;
     min-height: 33px;
-    max-height: 33px;
+    max-height: 83px;
     overflow-y: auto;
 }
 

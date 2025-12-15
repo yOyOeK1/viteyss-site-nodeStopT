@@ -199,24 +199,34 @@ class nstLib{
         return { trDebug:tr, timeLine: tl };
     }
 
-    layers_toStr( layers, metadata ) {
-        let tr = JSONcopy( layers );
-        let cMeta= {};
 
-        tr.forEach( l => {
+    scenLayers_toStr( sLays ){
+        let sls = [];
+        sLays.forEach( sl => {            
+            sls.push({
+                id: sl.id,
+                layers: this.layers_toStr( sl.layers ),
+                entryDate: sl.entryDate,
+            });
+        } );
+        return sls;
+    }
+
+    layers_toStr( layers ) {
+        let lays = JSONcopy( layers );
+        lays.forEach( l => {
             l['obj'] = ''; 
             l['nodeObservator'] = null;
-        });    
+        });            
+        return lays;
+    }
+
+    metadata_toStr( metadata ) {
+        let cMeta= {};
         Object.keys( metadata ).forEach( k => 
             cMeta[ k ] = ( k == 'timeLine' ) ? -1 :  metadata[ k ]
         );
-
-        return {
-            metadata: cMeta,
-            layers: tr
-        };
-
-    }
+        return cMeta;    }
 
     layres_from_json ( jLayers ){
 

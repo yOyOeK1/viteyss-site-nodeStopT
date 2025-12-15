@@ -1,0 +1,32 @@
+{
+	"folders": [
+		{
+			"path": "../viteyss"
+		},
+		{
+			"path": "../viteyss-site-hello-world"
+		},
+		{
+			"path": "../viteyss-site-otdmtools"
+		},
+		{
+			"path": "../oiyshTerminal/ySS_calibration"
+		},
+		{
+			"path": "../mnodehttp"
+		},
+		{
+			"path": "../node-yss"
+		},
+		{
+			"path": "../viteyss-site-mapleaflet"
+		},
+		{
+			"path": "../viteyss-site-settings1"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {}
+}
