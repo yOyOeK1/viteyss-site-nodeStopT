@@ -9,92 +9,10 @@ import { nstConvert, nstLib } from './nstLib';
 import curInfNst from './MediaAssets/cursor_info_nst.json';
 
 
-/** to make nice throttling on not decided client :P  */
-function mkTrashHold( keyIdent, func, msTrash ){
-  let t = Date.now();
-  console.log(`mkTH spon \n\tkeyIdent[${keyIdent}], func, msTrash[${msTrash}]`);
-
-  if( !('trashH' in window) ){
-    window['trashH'] = {
-      entryDate: t,
-      items: {}
-    };
-  }
-
-  if( keyIdent in window['trashH']['items'] ){
-    let item = window['trashH']['items'][ keyIdent ];
-    clearTimeout( item.iter );
-    item.tEvents.push( t );
-    item.iter = setTimeout(()=> {
-      console.log(`mkTrashHold ok for keyIdent: [${item.keyIdent}] events:(${item.tEvents.length})`);
-      func(); 
-      delete window['trashH']['items'][ keyIdent ];
-    }, msTrash );
-    return 2;
-
-  }
-
-
-
-  window['trashH']['items'][ keyIdent ] = {
-    'keyIdent': keyIdent,
-    'func': func,
-    'tStart': t,
-    'tEvents': [],
-    'msTrash': msTrash,
-    'iter': setTimeout(()=>func() , msTrash )
-  };
-
-  return 1;
-}
-
-
-
-
 class site{
 
   constructor(){
     console.log('* * 8 8 initated ! c_site ...................... running MODE['+import.meta.env.MODE+']');
-
-
-
-    console.log(`-------------------------
-      inject window.mkTrashHold ---------------`);
-    window['mkTrashHold'] = mkTrashHold;
-
-
-
-    console.log(`-------------------------
-    * inject JSON.clone 
-    * inject JSON.cloneRaw
-    * inject JSON.rawDump
-    * inject JSON.rawDumpNice
-    * inject JSON.findByKey
----------------------------------`);
-    JSON.clone = ( j ) => {
-      return JSON.parse( JSON.stringify( j ) );
-    };
-    JSON.cloneRaw = ( j ) => {
-      return JSON.clone( toRaw( j ) );
-    };
-    JSON.dumpNice = ( j ) => {
-      return JSON.stringify( j,null,4 );
-    };
-    JSON.rawDump = ( j ) => {
-      return JSON.stringify( toRaw ( j ) );
-    };
-    JSON.rawDumpNice = ( j ) => {
-      return JSON.stringify( toRaw ( j ),null,4 );
-    };
-    JSON.findByKey = ( jIn, keyName, valLook ) =>{
-      for( let ji of jIn ){
-        if( ji[ keyName ] == valLook )
-          return ji;
-      }
-      return -1;
-    };
-
-
 
 
    
@@ -212,8 +130,9 @@ class site{
 
 
 
-  onWindowResize=( w, h)=>{
-    setTimeout(()=> this.appTL._instance.ctx.onWindowResize( w, h ), 1);
+  onWindowResize=( w, h )=>{
+    if( this.appTL )
+      setTimeout(()=> this.appTL._instance.ctx.onWindowResize( w, h ), 1);
   }
 
 

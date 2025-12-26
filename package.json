@@ -9,7 +9,9 @@
     "cleanIt": "rm ./tmp/* ; exit 0",
     "bundleIt": "time node ./buildIt.js && echo '--- DONE OK' && exit 1",
     "setSiteAsDev": "./setAsDev.sh",
-    "setSiteAsBundle": "./setAsBundle.sh"
+    "setSiteAsBundle": "./setAsBundle.sh",
+
+    "mkBackup": "fn=$npm_package_name\"_v\"$npm_package_version\"_tt\"`date +%y%m%d%H%M%S`\".tar.bz2\"; echo \"name will be [$fn]\";  tar --exclude=\".git\" --exclude=\"node_modules\" -cvf \"../\"$fn ./; echo \"Backup done: [$fn]\"; ls -alh ../$fn"
   },
   "author": "Bartłomiej Ceglik <yoyoek@wp.pl>",
   "license": "MIT",
