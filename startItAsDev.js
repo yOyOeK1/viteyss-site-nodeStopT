@@ -85,7 +85,8 @@ var config0 = {
   
   'sitesInjection': true,
   'ws': undefined,
-  'wsPinger': false
+  'wsPinger': false,
+  'vy_Args':{}
 };
 
 if( config0.https == true ){
